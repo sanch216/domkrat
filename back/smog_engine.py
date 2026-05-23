@@ -283,7 +283,7 @@ async def generate_mock_heatmap(
     # --- Текстовый совет от AI (OpenRouter) ---
     try:
         from ai_advisor import get_mayor_advice
-        ai_text = get_mayor_advice(
+        ai_text = await get_mayor_advice(
             avg_pollution=aqi,
             tec_power=tec_power_pct,
             traffic=traffic_level_pct,

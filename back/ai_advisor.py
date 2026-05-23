@@ -1,5 +1,5 @@
 import os
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 try:
     from dotenv import load_dotenv
@@ -15,7 +15,7 @@ api_key = os.getenv("OPENROUTER_API_KEY")
 
 client = None
 if api_key:
-    client = OpenAI(
+    client = AsyncOpenAI(
         api_key=api_key,
         base_url="https://openrouter.ai/api/v1",
     )
@@ -26,7 +26,7 @@ else:
 MODEL_NAME = "baidu/cobuddy:free"
 
 
-def get_mayor_advice(avg_pollution, tec_power, traffic, heating_ban, wind_speed):
+async def get_mayor_advice(avg_pollution, tec_power, traffic, heating_ban, wind_speed):
     tec_pct = tec_power if tec_power > 1.0 else tec_power * 100
     traffic_pct = traffic if traffic > 1.0 else traffic * 100
 
@@ -46,7 +46,7 @@ def get_mayor_advice(avg_pollution, tec_power, traffic, heating_ban, wind_speed)
         return _fallback(avg_pollution, tec_pct, traffic_pct)
 
     try:
-        response = client.chat.completions.create(
+        response = await client.chat.completions.create(
             model=MODEL_NAME,
             messages=[{"role": "user", "content": prompt}],
         )
