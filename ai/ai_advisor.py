@@ -23,7 +23,7 @@ if api_key:
 else:
     print("AI Advisor: ВНИМАНИЕ! Нет OPENROUTER_API_KEY в .env")
 
-MODEL_NAME = "baidu/cobuddy:free"
+MODEL_NAME = "deepseek/deepseek-v4-flash"
 
 
 async def get_mayor_advice(avg_pollution, tec_power, traffic, heating_ban, wind_speed):
@@ -49,6 +49,7 @@ async def get_mayor_advice(avg_pollution, tec_power, traffic, heating_ban, wind_
         response = await client.chat.completions.create(
             model=MODEL_NAME,
             messages=[{"role": "user", "content": prompt}],
+            extra_body={"reasoning": {"enabled": True}}
         )
         text = response.choices[0].message.content
         return text.strip() if text else _fallback(avg_pollution, tec_pct, traffic_pct)
