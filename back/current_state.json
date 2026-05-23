@@ -1,5 +1,5 @@
 {
-  "active_mode": "live",
+  "active_mode": "edit",
   "modified_object": null,
   "city_state": {
     "tec_1": "coal_full",
@@ -21,10 +21,10 @@
     "airport": "reduced"
   },
   "weather": {
-    "wind_direction": 45,
-    "wind_speed": 2.0,
-    "temperature": -5.0,
-    "weather_type": "clear"
+    "wind_direction": 35,
+    "wind_speed": 0.0,
+    "temperature": 29.0,
+    "weather_type": "rain"
   },
   "use_real_weather": false,
   "traffic_level": 50

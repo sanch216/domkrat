@@ -111,7 +111,7 @@ function connectWs() {
 
   ws.onopen = function() {
     console.log('[WS] Connected');
-    runSimulation();
+    sendCurrentParams();
   };
 
   ws.onmessage = function(event) {
@@ -367,7 +367,13 @@ function runSimulation() {
   if (windSystem) windSystem.update(c.windSpeed, c.windDirection);
   updateTrafficLevel(c.trafficLevel);
 
-  // Local fallback computation (instant visual feedback)
+  // If WS is connected, just send params and let backend handle it
+  if (ws && ws.readyState === 1) {
+    sendCurrentParams();
+    return;
+  }
+
+  // Local fallback computation (only when WS is not connected)
   var objects = getCityObjects();
   var localData = computeLocalPollution(objects, c);
   updateSegmentIntensities(localData);
@@ -376,15 +382,19 @@ function runSimulation() {
   var localAqi = Math.round(avgIntensity * 500);
   updateAqi(localAqi);
 
-  // Local insight fallback
   var maxSeg = localData.reduce(function(a, b) { return a.intensity > b.intensity ? a : b; });
   var insight = generateInsight(objects, c, localAqi, maxSeg);
   var it = document.getElementById('insightText');
   var io = document.getElementById('insightOverlay');
   if (it) it.textContent = insight;
   if (io) io.classList.remove('hidden');
+}
 
-  // Send to backend via WebSocket (will override with real AI + ML data)
+function sendCurrentParams() {
+  var c = getControls();
+  if (windSystem) windSystem.update(c.windSpeed, c.windDirection);
+  updateTrafficLevel(c.trafficLevel);
+
   var cityState = getCityState();
   var params = {
     active_mode: currentMode,
