@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Domkrat — интерактивная 3D-симуляция загрязнения воздуха в Бишкеке">
+  <title>Domkrat — Чистый воздух для Бишкека</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <div class="logo-mark">&#9672;</div>
+        <span class="logo-name">Domkrat</span>
+      </div>
+      <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+      <div class="nav-links" id="navLinks">
+        <a href="#features" data-nav-link>Возможности</a>
+        <a href="#how-it-works" data-nav-link>Процесс</a>
+        <a href="#map-preview" data-nav-link>Карта</a>
+        <button class="btn-pill btn-filled btn-sm" onclick="navigateTo('app')">Открыть карту</button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="landing">
+    <div id="mouseGlow"></div>
+
+    <section class="hero">
+      <div class="hero-glow"></div>
+      <div class="hero-glow-secondary"></div>
+      <div class="hero-eyebrow"><span class="dot"></span> Bishkek Air Quality Monitor</div>
+      <h1>Чистый воздух<br>для <em>Бишкека</em></h1>
+      <p class="hero-sub">Визуализация и симуляция загрязнения воздуха на интерактивной 3D-карте. Анализ ТЭЦ, промышленных объектов, трафика и погодных условий. Локальный расчёт через AI-модель в реальном времени.</p>
+      <div class="hero-actions">
+        <button class="btn-pill btn-filled" onclick="navigateTo('app')">Запустить</button>
+        <a href="#features" class="btn-pill">Подробнее</a>
+      </div>
+    </section>
+
+    <div class="stats-bar reveal" id="statsBar">
+      <div class="stat-item"><div class="stat-value" data-count="17">0</div><div class="stat-label">Объектов мониторинга</div></div>
+      <div class="stat-item"><div class="stat-value" data-count="36">0</div><div class="stat-label">Сегментов карты</div></div>
+      <div class="stat-item"><div class="stat-value" data-count="3">0</div><div class="stat-label">Слоя визуализации</div></div>
+      <div class="stat-item"><div class="stat-value">AI</div><div class="stat-label">Советник</div></div>
+    </div>
+
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-header reveal">
+          <div class="section-label">Возможности</div>
+          <h2 class="section-title">Command Center для воздуха</h2>
+          <p class="section-desc">Три ключевых инструмента для мониторинга, симуляции и анализа качества воздуха в городе</p>
+        </div>
+        <div class="features-grid reveal-stagger">
+          <div class="feature-card reveal">
+            <div class="feature-icon violet">M</div>
+            <h3>Живая 3D-карта</h3>
+            <p>Город разбит на 36 сегментов по сетке улиц. Каждый сегмент окрашивается в реальном времени — от прозрачно-зелёного до пульсирующего красного. Одновременно на карте отображаются потоки ветра и анимированные линии трафика с цветовой индикацией загруженности дорог.</p>
+          </div>
+          <div class="feature-card reveal">
+            <div class="feature-icon blue">S</div>
+            <h3>Интерактивная симуляция</h3>
+            <p>Кликайте по зданиям, ТЭЦ, заводам и паркам на карте. Меняйте их тип и параметры — переводите котельные с угля на газ, снижайте мощность промзон. AI-модель мгновенно пересчитывает уровень загрязнения по каждому сегменту города и обновляет визуализацию.</p>
+          </div>
+          <div class="feature-card reveal">
+            <div class="feature-icon green">A</div>
+            <h3>AI-советник</h3>
+            <p>Интеллектуальный помощник анализирует текущую конфигурацию города и погодные условия. Предоставляет рекомендации по снижению выбросов, оценивает влияние температурной инверсии, направления ветра и осадков на распределение смога.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="how-it-works">
+      <div class="container">
+        <div class="section-header reveal">
+          <div class="section-label">Процесс</div>
+          <h2 class="section-title">Три шага к результату</h2>
+          <p class="section-desc">От наблюдения к действию — пошаговый анализ экологической ситуации</p>
+        </div>
+        <div class="steps-grid reveal-stagger">
+          <div class="step-card reveal">
+            <h3>Исследуйте карту</h3>
+            <p>Откройте 3D-карту города. 36 сегментов, разделённых по сетке главных улиц, окрашены по текущему уровню загрязнения. Вращайте камеру, приближайте отдельные районы, наблюдайте за направлением ветра и потоками трафика.</p>
+          </div>
+          <div class="step-card reveal">
+            <h3>Настройте параметры</h3>
+            <p>Переключитесь в режим симуляции. Кликните на ТЭЦ, чтобы перевести её на газ. Измените тип отопления в частном секторе. Закройте загруженную дорогу. Каждое действие мгновенно пересчитывает карту через локальную AI-модель.</p>
+          </div>
+          <div class="step-card reveal">
+            <h3>Получите аналитику</h3>
+            <p>AI-советник оценит ваши изменения и сравнит сценарии. Покажет, какие факторы критичны для каждого сегмента, предложит оптимальную стратегию и рассчитает потенциальное снижение AQI.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="map-preview-section reveal-scale" id="map-preview">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Предпросмотр</div>
+          <h2 class="section-title">3D-карта города</h2>
+          <p class="section-desc">Сегменты загрязнения, трафик и ветер — все слои одновременно</p>
+        </div>
+        <div class="map-preview-frame">
+          <div id="preview-map"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section reveal">
+      <div class="container">
+        <div class="cta-glow"></div>
+        <h2>Готовы к<br><em>анализу?</em></h2>
+        <p>Откройте Command Center и исследуйте качество воздуха в Бишкеке</p>
+        <div class="hero-actions">
+          <button class="btn-pill btn-filled" onclick="navigateTo('app')">Запустить карту</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">Domkrat — AI Hub Hackathon 2026</footer>
+  </main>
+
+  <main id="app-view" class="hidden">
+    <div class="app-layout">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="logo-mark" style="width:26px;height:26px;font-size:11px;border-radius:7px;">&#9672;</div>
+          <span class="sidebar-title">Domkrat</span>
+          <button class="sidebar-collapse-btn" id="sidebarToggle">&#9666;</button>
+        </div>
+        <div class="sidebar-nav">
+          <button class="sidebar-nav-btn active" data-mode="live"><span class="nav-icon">&#9671;</span><span class="nav-label">Карта</span></button>
+          <button class="sidebar-nav-btn" data-mode="edit"><span class="nav-icon">&#9998;</span><span class="nav-label">Симуляция</span></button>
+          <button class="sidebar-nav-btn" data-mode="ai"><span class="nav-icon">&#9678;</span><span class="nav-label">AI</span></button>
+        </div>
+        <div class="sidebar-controls" id="sidebarControls"></div>
+        <div class="sidebar-footer">
+          <button class="btn-pill btn-sm" style="width:100%;justify-content:center;" onclick="navigateTo('landing')">&#8592; Главная</button>
+        </div>
+      </aside>
+
+      <div class="map-area" id="mapArea">
+        <div id="map"></div>
+        <canvas id="windCanvas"></canvas>
+        <div class="map-overlay-aqi hidden" id="aqiOverlay">
+          <svg class="aqi-ring" viewBox="0 0 86 86">
+            <circle cx="43" cy="43" r="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4"/>
+            <circle id="aqiArc" cx="43" cy="43" r="36" fill="none" stroke-width="4" stroke-linecap="round"
+              transform="rotate(-90 43 43)" stroke-dasharray="0 226" stroke="#663af3"/>
+          </svg>
+          <div class="aqi-number" id="aqiNumber">—</div>
+          <div class="aqi-label-text">AQI</div>
+          <div class="aqi-status" id="aqiStatus"></div>
+        </div>
+        <div class="map-overlay-insight hidden" id="insightOverlay">
+          <div class="insight-header">&#10022; Анализ</div>
+          <div class="insight-text" id="insightText"></div>
+        </div>
+      </div>
+
+      <div class="ai-panel hidden" id="aiPanel">
+        <div class="ai-header">
+          <div class="ai-avatar">&#9678;</div>
+          <div class="ai-header-info">
+            <h3>AI Советник</h3>
+            <p>Анализ качества воздуха</p>
+          </div>
+          <div class="ai-status"><span class="ai-status-dot"></span>Online</div>
+        </div>
+        <div class="ai-messages" id="aiMessages">
+          <div class="ai-msg bot">Здравствуйте. Я AI-советник по качеству воздуха. Задайте вопрос о загрязнении, ТЭЦ, влиянии трафика или запросите рекомендации.<div class="ai-msg-time">сейчас</div></div>
+        </div>
+        <div class="ai-input-bar">
+          <input class="ai-input" id="aiInput" type="text" placeholder="Задайте вопрос...">
+          <button class="ai-send-btn" id="aiSendBtn">&#10148;</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
