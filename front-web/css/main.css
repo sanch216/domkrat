@@ -22,7 +22,26 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
 
 .container { max-width: 1140px; margin: 0 auto; padding: 0 32px; }
 
-#landing { min-height: 100vh; background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void-deep) 100%); }
+#landing {
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void-deep) 100%);
+  position: relative;
+}
+
+#mouseGlow {
+  position: fixed;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(102, 58, 243, 0.07) 0%, rgba(141, 214, 255, 0.02) 40%, transparent 65%);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  will-change: left, top;
+}
+#landing:hover #mouseGlow { opacity: 1; }
 
 .hero {
   min-height: 100vh;
@@ -36,26 +55,25 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   overflow: hidden;
 }
 
-.hero::before {
-  content: '';
+.hero-glow {
   position: absolute;
   top: -30%;
   left: 50%;
   transform: translateX(-50%);
-  width: 900px;
-  height: 900px;
+  width: 1000px;
+  height: 1000px;
   background: radial-gradient(circle, var(--neon-violet-glow) 0%, transparent 65%);
   animation: violetPulse 6s ease-in-out infinite;
   pointer-events: none;
+  will-change: transform;
 }
 
-.hero::after {
-  content: '';
+.hero-glow-secondary {
   position: absolute;
-  bottom: -20%;
-  right: -10%;
-  width: 600px;
-  height: 600px;
+  bottom: -25%;
+  right: -12%;
+  width: 700px;
+  height: 700px;
   background: radial-gradient(circle, rgba(141, 214, 255, 0.06) 0%, transparent 65%);
   animation: violetPulse 8s ease-in-out 2s infinite;
   pointer-events: none;
@@ -74,12 +92,11 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   text-transform: uppercase;
   color: var(--polar-blue);
   margin-bottom: 40px;
-  animation: fadeInUp 1s var(--ease-out-expo) both;
+  animation: fadeInUp 1s var(--ease-out-expo) 0.1s both;
   backdrop-filter: blur(8px);
 }
 
-.hero-eyebrow::before {
-  content: '';
+.hero-eyebrow .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -90,13 +107,13 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
 
 .hero h1 {
   font-family: var(--font-display);
-  font-size: clamp(48px, 8vw, 96px);
+  font-size: clamp(48px, 8vw, 100px);
   font-weight: 300;
   line-height: 1.05;
   letter-spacing: -1px;
   color: var(--text-ghost);
   margin-bottom: 28px;
-  animation: fadeInUp 1.2s var(--ease-out-expo) 0.1s both;
+  animation: fadeInUp 1.2s var(--ease-out-expo) 0.2s both;
 }
 
 .hero h1 em {
@@ -111,10 +128,10 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   font-size: 17px;
   font-weight: 300;
   color: var(--text-ash);
-  max-width: 480px;
+  max-width: 520px;
   margin-bottom: 48px;
-  line-height: 1.7;
-  animation: fadeInUp 1.2s var(--ease-out-expo) 0.25s both;
+  line-height: 1.8;
+  animation: fadeInUp 1.2s var(--ease-out-expo) 0.35s both;
 }
 
 .hero-actions {
@@ -122,37 +139,38 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   gap: 16px;
   flex-wrap: wrap;
   justify-content: center;
-  animation: fadeInUp 1.2s var(--ease-out-expo) 0.4s both;
+  animation: fadeInUp 1.2s var(--ease-out-expo) 0.5s both;
 }
 
 .stats-bar {
   display: flex;
   justify-content: center;
-  gap: 56px;
-  padding: 56px 32px;
+  gap: 64px;
+  padding: 64px 32px;
   border-top: 1px solid var(--glass-border);
   border-bottom: 1px solid var(--glass-border);
   flex-wrap: wrap;
-  animation: fadeInUp 1s var(--ease-out-expo) 0.5s both;
 }
 
 .stat-item { text-align: center; }
 
 .stat-value {
   font-family: var(--font-display);
-  font-size: 42px;
+  font-size: 48px;
   font-weight: 300;
   color: var(--text-ghost);
+  transition: color 0.3s ease;
 }
 
 .stat-label {
   font-size: 12px;
   color: var(--text-ember);
-  margin-top: 4px;
+  margin-top: 6px;
   letter-spacing: 0.5px;
+  font-weight: 300;
 }
 
-.section { padding: 100px 0; }
+.section { padding: 120px 0; }
 
 .section-label {
   font-size: 11px;
@@ -165,11 +183,11 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
 
 .section-title {
   font-family: var(--font-display);
-  font-size: clamp(32px, 4.5vw, 52px);
+  font-size: clamp(32px, 4.5vw, 56px);
   font-weight: 300;
   color: var(--text-ghost);
   letter-spacing: -0.5px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .section-desc {
@@ -182,7 +200,7 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
 
 .section-header {
   text-align: center;
-  margin-bottom: 72px;
+  margin-bottom: 80px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -197,11 +215,13 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
 .feature-card {
   background: var(--bg-card);
   border-radius: var(--radius-card);
-  padding: 36px;
+  padding: 44px;
+  min-height: 320px;
   box-shadow: var(--shadow-card);
-  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  transition: box-shadow 0.5s var(--ease-out-expo), transform 0.5s var(--ease-out-expo), border-color 0.5s ease;
   position: relative;
   overflow: hidden;
+  border: 1px solid transparent;
 }
 
 .feature-card::before {
@@ -212,46 +232,59 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   right: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(199, 211, 234, 0.15), transparent);
+  transition: opacity 0.4s ease;
 }
 
 .feature-card:hover {
-  box-shadow: var(--shadow-card-hover);
-  transform: translateY(-6px);
+  box-shadow: var(--shadow-card-hover), 0 0 40px rgba(102, 58, 243, 0.08);
+  transform: translateY(-8px) scale(1.01);
+  border-color: rgba(102, 58, 243, 0.15);
 }
 
 .feature-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
-  margin-bottom: 24px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  margin-bottom: 28px;
+  color: var(--text-ghost);
+  letter-spacing: 1px;
+  transition: transform 0.4s var(--ease-out-expo), box-shadow 0.4s ease;
 }
 
-.feature-icon.violet { background: var(--neon-violet-dim); }
-.feature-icon.green { background: var(--spring-green-dim); }
-.feature-icon.blue { background: var(--polar-blue-dim); }
+.feature-card:hover .feature-icon { transform: scale(1.12) rotate(3deg); }
+
+.feature-icon.violet { background: var(--neon-violet-dim); box-shadow: 0 0 0 1px rgba(102,58,243,0.1); }
+.feature-icon.green { background: var(--spring-green-dim); box-shadow: 0 0 0 1px rgba(8,135,43,0.1); }
+.feature-icon.blue { background: var(--polar-blue-dim); box-shadow: 0 0 0 1px rgba(141,214,255,0.1); }
+
+.feature-card:hover .feature-icon.violet { box-shadow: var(--glow-violet); }
+.feature-card:hover .feature-icon.green { box-shadow: var(--glow-green); }
+.feature-card:hover .feature-icon.blue { box-shadow: var(--glow-blue); }
 
 .feature-card h3 {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 400;
   color: var(--text-ghost);
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .feature-card p {
   font-size: 14px;
   color: var(--text-ash);
-  line-height: 1.65;
+  line-height: 1.75;
   font-weight: 300;
 }
 
 .steps-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
   counter-reset: step;
 }
@@ -259,46 +292,55 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
 .step-card {
   background: var(--bg-card);
   border-radius: var(--radius-card);
-  padding: 36px;
+  padding: 44px;
+  min-height: 300px;
   box-shadow: var(--shadow-card);
   counter-increment: step;
   position: relative;
   overflow: hidden;
-  transition: box-shadow var(--transition-base);
+  border: 1px solid transparent;
+  transition: box-shadow 0.5s var(--ease-out-expo), transform 0.5s var(--ease-out-expo), border-color 0.5s ease;
 }
 
 .step-card::before {
   content: '0' counter(step);
   font-family: var(--font-display);
-  font-size: 56px;
+  font-size: 64px;
   font-weight: 300;
   color: var(--text-ember);
-  opacity: 0.3;
+  opacity: 0.2;
   line-height: 1;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   display: block;
+  transition: opacity 0.4s ease, transform 0.4s var(--ease-out-expo);
 }
 
-.step-card:hover { box-shadow: var(--shadow-card-hover); }
+.step-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-6px);
+  border-color: rgba(141, 214, 255, 0.08);
+}
+.step-card:hover::before { opacity: 0.4; transform: translateX(4px); }
 
 .step-card h3 {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 400;
   color: var(--text-ghost);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-.step-card p { font-size: 14px; color: var(--text-ash); line-height: 1.65; font-weight: 300; }
+.step-card p { font-size: 14px; color: var(--text-ash); line-height: 1.75; font-weight: 300; }
 
-.map-preview-section { padding: 100px 0; }
+.map-preview-section { padding: 120px 0; }
 
 .map-preview-frame {
   position: relative;
-  height: 480px;
+  height: 500px;
   border-radius: var(--radius-card);
   overflow: hidden;
   box-shadow: var(--shadow-card);
+  border: 1px solid var(--glass-border);
 }
 
 .map-preview-frame::after {
@@ -314,13 +356,12 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
 .map-preview-frame #preview-map { width: 100%; height: 100%; }
 
 .cta-section {
-  padding: 140px 0;
+  padding: 160px 0;
   text-align: center;
   position: relative;
 }
 
-.cta-section::before {
-  content: '';
+.cta-section .cta-glow {
   position: absolute;
   bottom: 10%;
   left: 50%;
@@ -333,7 +374,7 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
 
 .cta-section h2 {
   font-family: var(--font-display);
-  font-size: clamp(36px, 5.5vw, 64px);
+  font-size: clamp(36px, 5.5vw, 68px);
   font-weight: 300;
   color: var(--text-ghost);
   margin-bottom: 20px;
@@ -343,12 +384,40 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
 
 .footer {
   border-top: 1px solid var(--glass-border);
-  padding: 36px;
+  padding: 40px;
   text-align: center;
   font-size: 12px;
   color: var(--text-ember);
   letter-spacing: 0.3px;
 }
+
+.reveal {
+  opacity: 0;
+  transform: translateY(60px);
+  transition: opacity 1s var(--ease-out-expo), transform 1s var(--ease-out-expo);
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-stagger .reveal:nth-child(1) { transition-delay: 0s; }
+.reveal-stagger .reveal:nth-child(2) { transition-delay: 0.12s; }
+.reveal-stagger .reveal:nth-child(3) { transition-delay: 0.15s; }
+.reveal-stagger .reveal:nth-child(4) { transition-delay: 0.24s; }
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-40px);
+  transition: opacity 0.9s var(--ease-out-expo), transform 0.9s var(--ease-out-expo);
+}
+.reveal-left.revealed { opacity: 1; transform: translateX(0); }
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.9s var(--ease-out-expo), transform 0.9s var(--ease-out-expo);
+}
+.reveal-scale.revealed { opacity: 1; transform: scale(1); }
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(40px); }
@@ -365,11 +434,28 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   50% { opacity: 0.3; }
 }
 
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(102, 58, 243, 0.1); }
+  50% { border-color: rgba(102, 58, 243, 0.3); }
+}
+
 @media (max-width: 768px) {
   .hero { padding: 110px 20px 60px; }
-  .stats-bar { gap: 28px; padding: 36px 20px; }
-  .section { padding: 64px 0; }
+  .stats-bar { gap: 28px; padding: 40px 20px; }
+  .section { padding: 72px 0; }
   .container { padding: 0 20px; }
   .features-grid, .steps-grid { grid-template-columns: 1fr; }
   .map-preview-frame { height: 280px; }
+  .feature-card, .step-card { min-height: auto; padding: 32px; }
+  .cta-section { padding: 100px 0; }
 }

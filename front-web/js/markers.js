@@ -25,15 +25,15 @@ const STATE_LABELS = {
   active: 'Активный', reduced: 'Сниженный', inactive: 'Неактивный',
   coal_heating: 'Уголь', gas_heating: 'Газ', electric_heating: 'Электро', no_heating: 'Нет отопления',
   congested: 'Пробка', moderate: 'Умеренно', free_flow: 'Свободно', closed: 'Закрыто',
-  full_load: 'Полная нагрузка', reduced: 'Сниженная', idle: 'Простой', shutdown: 'Остановка'
+  full_load: 'Полная нагрузка', idle: 'Простой', shutdown: 'Остановка'
 };
 
 const TYPE_LABELS = {
-  tec: '🏭 ТЭЦ',
-  park: '🌳 Парк',
-  district: '🏘️ Район',
-  road: '🛣️ Дорога',
-  factory: '⚙️ Промышленность'
+  tec: 'ТЭЦ',
+  park: 'Парк',
+  district: 'Район',
+  road: 'Дорога',
+  factory: 'Промышленность'
 };
 
 let markers = [];
@@ -43,8 +43,8 @@ let onStateChangeCb = null;
 export function getCityObjects() { return CITY_OBJECTS; }
 
 export function getCityState() {
-  const s = {};
-  CITY_OBJECTS.forEach(o => s[o.id] = o.state);
+  var s = {};
+  CITY_OBJECTS.forEach(function(o) { s[o.id] = o.state; });
   return s;
 }
 
@@ -52,35 +52,34 @@ export function addMarkers(map, onStateChange) {
   onStateChangeCb = onStateChange;
   removeMarkers();
 
-  CITY_OBJECTS.forEach(obj => {
-    const el = document.createElement('div');
-    el.style.cssText = `
-      width:18px;height:18px;border-radius:50%;
-      background:${obj.color};
-      border:2px solid rgba(255,255,255,0.25);
-      cursor:pointer;
-      transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
-      box-shadow:0 0 12px ${obj.color}60, 0 0 4px ${obj.color}90;
-    `;
+  CITY_OBJECTS.forEach(function(obj) {
+    var el = document.createElement('div');
+    el.style.cssText =
+      'width:18px;height:18px;border-radius:50%;' +
+      'background:' + obj.color + ';' +
+      'border:2px solid rgba(255,255,255,0.25);' +
+      'cursor:pointer;' +
+      'transition:all 0.25s cubic-bezier(0.16,1,0.3,1);' +
+      'box-shadow:0 0 12px ' + obj.color + '60, 0 0 4px ' + obj.color + '90;';
     el.title = obj.name;
 
-    el.addEventListener('mouseenter', () => {
+    el.addEventListener('mouseenter', function() {
       el.style.transform = 'scale(1.5)';
-      el.style.boxShadow = `0 0 24px ${obj.color}, 0 0 8px ${obj.color}`;
+      el.style.boxShadow = '0 0 24px ' + obj.color + ', 0 0 8px ' + obj.color;
     });
-    el.addEventListener('mouseleave', () => {
+    el.addEventListener('mouseleave', function() {
       el.style.transform = 'scale(1)';
-      el.style.boxShadow = `0 0 12px ${obj.color}60, 0 0 4px ${obj.color}90`;
+      el.style.boxShadow = '0 0 12px ' + obj.color + '60, 0 0 4px ' + obj.color + '90';
     });
 
-    const marker = new mapboxgl.Marker(el)
+    var marker = new mapboxgl.Marker(el)
       .setLngLat([obj.lng, obj.lat])
       .addTo(map);
 
-    el.addEventListener('click', (e) => {
+    el.addEventListener('click', function(e) {
       e.stopPropagation();
       flyToObject(obj.lng, obj.lat);
-      setTimeout(() => showCard(map, obj), 1400);
+      setTimeout(function() { showCard(map, obj); }, 1400);
     });
 
     markers.push(marker);
@@ -90,51 +89,50 @@ export function addMarkers(map, onStateChange) {
 function showCard(map, obj) {
   if (currentPopup) currentPopup.remove();
 
-  const optionsHtml = obj.states.map(s =>
-    `<option value="${s}" ${s === obj.state ? 'selected' : ''}>${STATE_LABELS[s] || s}</option>`
-  ).join('');
+  var optionsHtml = obj.states.map(function(s) {
+    return '<option value="' + s + '" ' + (s === obj.state ? 'selected' : '') + '>' + (STATE_LABELS[s] || s) + '</option>';
+  }).join('');
 
-  const html = `
-    <div class="marker-card">
-      <div class="marker-card-header">
-        <div class="marker-dot" style="background:${obj.color};box-shadow:0 0 10px ${obj.color};"></div>
-        <div>
-          <div class="marker-card-name">${obj.name}</div>
-          <div class="marker-card-type">${TYPE_LABELS[obj.type] || obj.type}</div>
-        </div>
-      </div>
-      <div class="marker-card-status" style="background:${obj.color}15;color:${obj.color};border:1px solid ${obj.color}30;">
-        ${STATE_LABELS[obj.state] || obj.state}
-      </div>
-      <button class="btn-pill btn-sm" id="popup-edit-toggle" style="width:100%;justify-content:center;margin-top:4px;">✎ Изменить</button>
-      <div class="marker-card-edit hidden" id="popup-edit-panel">
-        <label>Состояние:</label>
-        <select id="popup-state-select">${optionsHtml}</select>
-        <button class="btn-pill btn-green btn-sm" id="popup-apply-btn" style="width:100%;justify-content:center;">Применить</button>
-      </div>
-    </div>
-  `;
+  var html =
+    '<div class="marker-card">' +
+      '<div class="marker-card-header">' +
+        '<div class="marker-dot" style="background:' + obj.color + ';box-shadow:0 0 10px ' + obj.color + ';"></div>' +
+        '<div>' +
+          '<div class="marker-card-name">' + obj.name + '</div>' +
+          '<div class="marker-card-type">' + (TYPE_LABELS[obj.type] || obj.type) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="marker-card-status" style="background:' + obj.color + '15;color:' + obj.color + ';border:1px solid ' + obj.color + '30;">' +
+        (STATE_LABELS[obj.state] || obj.state) +
+      '</div>' +
+      '<button class="btn-pill btn-sm" id="popup-edit-toggle" style="width:100%;justify-content:center;margin-top:4px;">Изменить</button>' +
+      '<div class="marker-card-edit hidden" id="popup-edit-panel">' +
+        '<label>Состояние:</label>' +
+        '<select id="popup-state-select">' + optionsHtml + '</select>' +
+        '<button class="btn-pill btn-green btn-sm" id="popup-apply-btn" style="width:100%;justify-content:center;">Применить</button>' +
+      '</div>' +
+    '</div>';
 
   currentPopup = new mapboxgl.Popup({ offset: 30, maxWidth: '280px' })
     .setLngLat([obj.lng, obj.lat])
     .setHTML(html)
     .addTo(map);
 
-  currentPopup.on('open', () => {
-    const editBtn = document.getElementById('popup-edit-toggle');
-    const editPanel = document.getElementById('popup-edit-panel');
-    const applyBtn = document.getElementById('popup-apply-btn');
-    const select = document.getElementById('popup-state-select');
+  currentPopup.on('open', function() {
+    var editBtn = document.getElementById('popup-edit-toggle');
+    var editPanel = document.getElementById('popup-edit-panel');
+    var applyBtn = document.getElementById('popup-apply-btn');
+    var select = document.getElementById('popup-state-select');
 
     if (editBtn && editPanel) {
-      editBtn.addEventListener('click', () => {
+      editBtn.addEventListener('click', function() {
         editPanel.classList.toggle('hidden');
-        editBtn.textContent = editPanel.classList.contains('hidden') ? '✎ Изменить' : '✕ Закрыть';
+        editBtn.textContent = editPanel.classList.contains('hidden') ? 'Изменить' : 'Закрыть';
       });
     }
 
     if (applyBtn && select) {
-      applyBtn.addEventListener('click', () => {
+      applyBtn.addEventListener('click', function() {
         obj.state = select.value;
         currentPopup.remove();
         if (onStateChangeCb) onStateChangeCb();
@@ -144,7 +142,7 @@ function showCard(map, obj) {
 }
 
 export function removeMarkers() {
-  markers.forEach(m => m.remove());
+  markers.forEach(function(m) { m.remove(); });
   markers = [];
   if (currentPopup) { currentPopup.remove(); currentPopup = null; }
 }

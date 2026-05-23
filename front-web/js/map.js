@@ -1,12 +1,9 @@
 import { MAPBOX_TOKEN } from './config.js';
 
 const CENTER = [74.59, 42.87];
-const ROWS = 5;
-const COLS = 6;
-const LAT_MIN = 42.825;
-const LAT_MAX = 42.910;
-const LNG_MIN = 74.530;
-const LNG_MAX = 74.660;
+
+export const STREET_LATS = [42.828, 42.842, 42.856, 42.870, 42.880, 42.895, 42.910];
+export const STREET_LNGS = [74.535, 74.558, 74.575, 74.592, 74.610, 74.632, 74.660];
 
 let map = null;
 let trafficAnimId = null;
@@ -38,19 +35,22 @@ const TRAFFIC_ROADS = {
   ]
 };
 
-function generateSegments() {
-  const latStep = (LAT_MAX - LAT_MIN) / ROWS;
-  const lngStep = (LNG_MAX - LNG_MIN) / COLS;
+function generateSegments(intensities) {
   const features = [];
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      const lat1 = LAT_MIN + r * latStep;
-      const lat2 = lat1 + latStep;
-      const lng1 = LNG_MIN + c * lngStep;
-      const lng2 = lng1 + lngStep;
+  for (let r = 0; r < STREET_LATS.length - 1; r++) {
+    for (let c = 0; c < STREET_LNGS.length - 1; c++) {
+      const lat1 = STREET_LATS[r];
+      const lat2 = STREET_LATS[r + 1];
+      const lng1 = STREET_LNGS[c];
+      const lng2 = STREET_LNGS[c + 1];
+      let intensity = 0;
+      if (intensities) {
+        const match = intensities.find(d => d.row === r && d.col === c);
+        if (match) intensity = match.intensity;
+      }
       features.push({
         type: 'Feature',
-        properties: { id: `seg_${r}_${c}`, row: r, col: c, intensity: 0 },
+        properties: { id: 'seg_' + r + '_' + c, row: r, col: c, intensity: intensity },
         geometry: {
           type: 'Polygon',
           coordinates: [[[lng1,lat1],[lng2,lat1],[lng2,lat2],[lng1,lat2],[lng1,lat1]]]
@@ -58,10 +58,11 @@ function generateSegments() {
       });
     }
   }
-  return { type: 'FeatureCollection', features };
+  return { type: 'FeatureCollection', features: features };
 }
 
-export function initMap(containerId, options = {}) {
+export function initMap(containerId, options) {
+  options = options || {};
   mapboxgl.accessToken = MAPBOX_TOKEN;
 
   map = new mapboxgl.Map({
@@ -69,14 +70,14 @@ export function initMap(containerId, options = {}) {
     style: 'mapbox://styles/mapbox/dark-v11',
     center: options.center || CENTER,
     zoom: options.zoom || 12,
-    pitch: options.pitch ?? 50,
-    bearing: options.bearing ?? -15,
+    pitch: options.pitch !== undefined ? options.pitch : 50,
+    bearing: options.bearing !== undefined ? options.bearing : -15,
     antialias: true
   });
 
   map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'top-right');
 
-  map.on('load', () => {
+  map.on('load', function() {
     add3DBuildings();
     addSmogSegments();
     addTrafficLayer();
@@ -89,11 +90,11 @@ export function initMap(containerId, options = {}) {
 }
 
 function add3DBuildings() {
-  const layers = map.getStyle().layers;
-  let labelLayerId;
-  for (const layer of layers) {
-    if (layer.type === 'symbol' && layer.layout['text-field']) {
-      labelLayerId = layer.id;
+  var layers = map.getStyle().layers;
+  var labelLayerId;
+  for (var i = 0; i < layers.length; i++) {
+    if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
+      labelLayerId = layers[i].id;
       break;
     }
   }
@@ -126,16 +127,16 @@ function addSmogSegments() {
     paint: {
       'fill-color': [
         'interpolate', ['linear'], ['get', 'intensity'],
-        0, 'rgba(8, 135, 43, 0.03)',
-        0.15, 'rgba(8, 135, 43, 0.12)',
-        0.3, 'rgba(141, 214, 255, 0.15)',
-        0.45, 'rgba(255, 193, 7, 0.2)',
-        0.6, 'rgba(255, 135, 9, 0.3)',
-        0.75, 'rgba(229, 57, 53, 0.4)',
-        0.9, 'rgba(200, 30, 60, 0.55)',
-        1.0, 'rgba(160, 20, 50, 0.65)'
+        0, 'rgba(8, 135, 43, 0.1)',
+        0.15, 'rgba(46, 178, 76, 0.25)',
+        0.3, 'rgba(141, 214, 255, 0.3)',
+        0.45, 'rgba(255, 197, 51, 0.4)',
+        0.6, 'rgba(255, 135, 9, 0.5)',
+        0.75, 'rgba(229, 57, 53, 0.6)',
+        0.9, 'rgba(200, 30, 60, 0.7)',
+        1.0, 'rgba(160, 20, 50, 0.8)'
       ],
-      'fill-opacity': 0.7
+      'fill-opacity': 1
     }
   }, '3d-buildings');
 
@@ -144,14 +145,8 @@ function addSmogSegments() {
     type: 'line',
     source: 'smog-segments',
     paint: {
-      'line-color': [
-        'interpolate', ['linear'], ['get', 'intensity'],
-        0, 'rgba(141, 214, 255, 0.04)',
-        0.3, 'rgba(141, 214, 255, 0.08)',
-        0.6, 'rgba(255, 135, 9, 0.12)',
-        1.0, 'rgba(229, 57, 53, 0.2)'
-      ],
-      'line-width': 1
+      'line-color': 'rgba(141, 214, 255, 0.12)',
+      'line-width': 1.5
     }
   }, '3d-buildings');
 }
@@ -224,7 +219,7 @@ function startTrafficAnimation() {
     if (map.getLayer('traffic-dash')) {
       map.setPaintProperty('traffic-dash', 'line-dasharray', DASH_SEQ[trafficDashStep]);
     }
-    trafficAnimId = setTimeout(() => requestAnimationFrame(tick), trafficSpeed);
+    trafficAnimId = setTimeout(function() { requestAnimationFrame(tick); }, trafficSpeed);
   }
   tick();
 }
@@ -232,7 +227,7 @@ function startTrafficAnimation() {
 function startSegmentPulse() {
   function tick() {
     segPulsePhase += 0.02;
-    const opc = 0.55 + Math.sin(segPulsePhase) * 0.15;
+    var opc = 0.85 + Math.sin(segPulsePhase) * 0.1;
     if (map.getLayer('smog-fill')) {
       map.setPaintProperty('smog-fill', 'fill-opacity', opc);
     }
@@ -241,46 +236,53 @@ function startSegmentPulse() {
   tick();
 }
 
+export function updateSegmentIntensities(data) {
+  if (!map) return;
+  var segments = generateSegments(data);
+  var src = map.getSource('smog-segments');
+  if (src) src.setData(segments);
+}
+
 export function updateSmogSegments(heatmapData) {
   if (!map) return;
-  const segments = generateSegments();
-  const latStep = (LAT_MAX - LAT_MIN) / ROWS;
-  const lngStep = (LNG_MAX - LNG_MIN) / COLS;
+  var segments = generateSegments();
+  var latStep, lngStep;
 
-  segments.features.forEach(seg => {
-    const r = seg.properties.row;
-    const c = seg.properties.col;
-    const lat1 = LAT_MIN + r * latStep;
-    const lat2 = lat1 + latStep;
-    const lng1 = LNG_MIN + c * lngStep;
-    const lng2 = lng1 + lngStep;
+  segments.features.forEach(function(seg) {
+    var r = seg.properties.row;
+    var c = seg.properties.col;
+    var lat1 = STREET_LATS[r];
+    var lat2 = STREET_LATS[r + 1];
+    var lng1 = STREET_LNGS[c];
+    var lng2 = STREET_LNGS[c + 1];
 
-    const pts = heatmapData.filter(p => p.lat >= lat1 && p.lat < lat2 && p.lng >= lng1 && p.lng < lng2);
+    var pts = heatmapData.filter(function(p) {
+      return p.lat >= lat1 && p.lat < lat2 && p.lng >= lng1 && p.lng < lng2;
+    });
     if (pts.length > 0) {
-      seg.properties.intensity = pts.reduce((s, p) => s + p.intensity, 0) / pts.length;
+      seg.properties.intensity = pts.reduce(function(s, p) { return s + p.intensity; }, 0) / pts.length;
     }
   });
 
-  const src = map.getSource('smog-segments');
+  var src = map.getSource('smog-segments');
   if (src) src.setData(segments);
 }
 
 export function clearSmogSegments() {
   if (!map) return;
-  const src = map.getSource('smog-segments');
+  var src = map.getSource('smog-segments');
   if (src) src.setData(generateSegments());
 }
 
 export function updateTrafficLevel(globalLevel) {
   if (!map) return;
-  const updated = JSON.parse(JSON.stringify(TRAFFIC_ROADS));
-  updated.features.forEach(f => {
-    const base = f.properties.level;
+  var updated = JSON.parse(JSON.stringify(TRAFFIC_ROADS));
+  updated.features.forEach(function(f) {
+    var base = f.properties.level;
     f.properties.level = Math.min(1, base * 0.4 + (globalLevel / 100) * 0.6 + (Math.random() - 0.5) * 0.1);
   });
-  const src = map.getSource('traffic-roads');
+  var src = map.getSource('traffic-roads');
   if (src) src.setData(updated);
-
   trafficSpeed = Math.max(20, 150 - globalLevel);
 }
 
@@ -311,7 +313,7 @@ export function resetView() {
 
 export function initPreviewMap(containerId) {
   mapboxgl.accessToken = MAPBOX_TOKEN;
-  const pm = new mapboxgl.Map({
+  return new mapboxgl.Map({
     container: containerId,
     style: 'mapbox://styles/mapbox/dark-v11',
     center: CENTER,
@@ -320,5 +322,4 @@ export function initPreviewMap(containerId) {
     bearing: 10,
     interactive: false
   });
-  return pm;
 }
