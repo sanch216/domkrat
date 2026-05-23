@@ -385,11 +385,25 @@ function aiReply(q) {
   return 'Качество воздуха зависит от ТЭЦ, трафика, отопления и метеоусловий. Задайте конкретный вопрос о любом факторе для детального анализа.';
 }
 
+function initCardGlow() {
+  document.querySelectorAll('.feature-card').forEach(function(card) {
+    card.addEventListener('mousemove', function(e) {
+      var rect = card.getBoundingClientRect();
+      var x = ((e.clientX - rect.left) / rect.width) * 100;
+      var y = ((e.clientY - rect.top) / rect.height) * 100;
+      card.style.setProperty('--card-mouse-x', x + '%');
+      card.style.setProperty('--card-mouse-y', y + '%');
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   initNavbar();
   initScrollReveal();
   initMouseGlow();
   initCounterAnimation();
   initParallax();
+  initCardGlow();
   try { initPreviewMap('preview-map'); } catch (e) {}
 });
+
