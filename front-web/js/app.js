@@ -105,15 +105,21 @@ function computeLocalPollution(objects, ctrl) {
 window.navigateTo = function(view) {
   var landing = document.getElementById('landing');
   var appView = document.getElementById('app-view');
+  var aboutView = document.getElementById('about-view');
   var navbar = document.getElementById('navbar');
 
+  landing.classList.add('hidden');
+  appView.classList.add('hidden');
+  if (aboutView) aboutView.classList.add('hidden');
+
   if (view === 'app') {
-    landing.classList.add('hidden');
     appView.classList.remove('hidden');
     navbar.classList.add('hidden');
     if (!appReady) initApp();
+  } else if (view === 'about') {
+    if (aboutView) aboutView.classList.remove('hidden');
+    navbar.classList.remove('hidden');
   } else {
-    appView.classList.add('hidden');
     landing.classList.remove('hidden');
     navbar.classList.remove('hidden');
   }

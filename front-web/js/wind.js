@@ -51,11 +51,16 @@ export class WindSystem {
 
       if (p.age > p.maxAge || p.x < -30 || p.x > this.canvas.width + 30 || p.y < -30 || p.y > this.canvas.height + 30) {
         var n = this._spawn(false);
-        if (dx > 0) n.x = -15; else if (dx < 0) n.x = this.canvas.width + 15;
-        if (dy > 0) n.y = -15; else if (dy < 0) n.y = this.canvas.height + 15;
-        if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) {
-          n.x = Math.random() * this.canvas.width;
-          n.y = Math.random() * this.canvas.height;
+        if (Math.random() < 0.5) {
+            // Spawn anywhere
+            n.x = Math.random() * this.canvas.width;
+            n.y = Math.random() * this.canvas.height;
+        } else {
+            // Spawn upwind edge
+            if (dx > 0) n.x = -15; else if (dx < 0) n.x = this.canvas.width + 15;
+            if (dy > 0) n.y = -15; else if (dy < 0) n.y = this.canvas.height + 15;
+            if (dx > 0 || dx < 0) n.y = Math.random() * this.canvas.height;
+            if (dy > 0 || dy < 0) n.x = Math.random() * this.canvas.width;
         }
         n.px = n.x;
         n.py = n.y;

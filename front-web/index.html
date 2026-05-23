@@ -24,9 +24,8 @@
       </div>
       <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
       <div class="nav-links" id="navLinks">
-        <a href="#features" data-nav-link>Возможности</a>
-        <a href="#how-it-works" data-nav-link>Процесс</a>
-        <a href="#map-preview" data-nav-link>Карта</a>
+        <button class="btn-pill btn-sm" onclick="navigateTo('about')">О нас</button>
+        <a href="https://t.me/" target="_blank" rel="noopener noreferrer" class="btn-pill btn-sm" style="text-decoration: none;">Поддержка</a>
         <button class="btn-pill btn-filled btn-sm" onclick="navigateTo('app')">Открыть карту</button>
       </div>
     </div>
@@ -171,26 +170,56 @@
         <div class="section-header">
           <div class="section-label">Предпросмотр</div>
           <h2 class="section-title">3D-карта города</h2>
-          <p class="section-desc">Сегменты загрязнения, трафик и ветер — все слои одновременно</p>
+          <p class="section-desc">Кликните по карте, чтобы перейти к основному функционалу Command Center</p>
         </div>
-        <div class="map-preview-frame">
-          <div id="preview-map"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="cta-section reveal">
-      <div class="container">
-        <div class="cta-glow"></div>
-        <h2>Готовы к<br><em>анализу?</em></h2>
-        <p>Откройте Command Center и исследуйте качество воздуха в Бишкеке</p>
-        <div class="hero-actions">
-          <button class="btn-pill btn-filled" onclick="navigateTo('app')">Запустить карту</button>
+        <div class="map-preview-frame" style="cursor:pointer; box-shadow: var(--glow-violet);" onclick="navigateTo('app')">
+          <div id="preview-map" style="pointer-events:none;"></div>
         </div>
       </div>
     </section>
 
     <footer class="footer">Domkrat — AI Hub Hackathon 2026</footer>
+  </main>
+
+  <main id="about-view" class="hidden">
+    <div class="dot-grid"></div>
+    <div class="float-orb" style="width:400px;height:400px;top:15%;left:-8%;background:rgba(102,58,243,0.03);"></div>
+    <div class="float-orb" style="width:300px;height:300px;top:55%;right:-5%;background:rgba(141,214,255,0.025);animation-delay:-8s;"></div>
+
+    <section class="hero" style="min-height: auto; padding-top: 160px; padding-bottom: 60px;">
+      <div class="hero-glow"></div>
+      <div class="hero-glow-secondary"></div>
+      <div class="hero-eyebrow"><span class="dot"></span> Команда разработчиков</div>
+      <h1>Мы — <em>3eFear</em></h1>
+      <p class="hero-sub">Создаем решения для улучшения экологии Бишкека. Инновации, аналитика и визуализация данных для чистого будущего.</p>
+    </section>
+
+    <div class="gradient-divider"></div>
+
+    <section class="section" style="padding-top: 60px; padding-bottom: 120px;">
+      <div class="container">
+        <div class="features-grid reveal-stagger">
+          <div class="feature-card reveal">
+            <div class="feature-icon violet">1</div>
+            <h3>Участник 1</h3>
+            <p>Информация появится позже</p>
+          </div>
+          <div class="feature-card reveal">
+            <div class="feature-icon blue">2</div>
+            <h3>Участник 2</h3>
+            <p>Информация появится позже</p>
+          </div>
+          <div class="feature-card reveal">
+            <div class="feature-icon green">3</div>
+            <h3>Участник 3</h3>
+            <p>Информация появится позже</p>
+          </div>
+        </div>
+        <div style="margin-top:80px; display:flex; justify-content:center;" class="reveal">
+          <button class="btn-pill btn-filled" onclick="navigateTo('landing')">&#8592; Назад на главную</button>
+        </div>
+      </div>
+    </section>
   </main>
 
   <main id="app-view" class="hidden">
