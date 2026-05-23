@@ -1,0 +1,7 @@
+{
+  "tec_power": 50.0,
+  "traffic_level": 50.0,
+  "coal_heating": true,
+  "wind_direction": 0.0,
+  "wind_speed": 2.0
+}
