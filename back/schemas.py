@@ -6,6 +6,7 @@ class WeatherConditions(BaseModel):
     wind_direction: int = Field(default=0, description="Направление ветра (градусы)")
     wind_speed: float = Field(default=2.0, description="Скорость ветра (м/с)")
     temperature: float = Field(default=5.0, description="Температура (°C)")
+    weather_type: str = Field(default="clear", description="Тип погоды: clear, rain, snow")
 
 
 class SimulationParams(BaseModel):
@@ -23,6 +24,7 @@ class SimulationParams(BaseModel):
     )
     weather: WeatherConditions = Field(default_factory=WeatherConditions)
     use_real_weather: bool = False
+    traffic_level: int = Field(default=50, ge=0, le=100, description="Глобальный уровень трафика (0-100)")
 
 
 class HeatmapPoint(BaseModel):
@@ -37,3 +39,4 @@ class SimulationResponse(BaseModel):
     heatmap_data: list[HeatmapPoint] = Field(default_factory=list, description="Точки тепловой карты")
     ai_insight: str = Field(default="", description="Рекомендация от AI")
     predicted_aqi: Optional[int] = Field(default=None, description="Предсказанный AQI через 12ч")
+

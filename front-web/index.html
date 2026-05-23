@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Domkrat — интерактивная 3D-симуляция загрязнения воздуха в Бишкеке">
+  <title>Domkrat — Чистый воздух для Бишкека</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <div class="logo-mark">&#9672;</div>
+        <span class="logo-name">Domkrat</span>
+      </div>
+      <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+      <div class="nav-links" id="navLinks">
+        <button class="btn-pill btn-sm" onclick="navigateTo('about')">О нас</button>
+        <a href="https://t.me/" target="_blank" rel="noopener noreferrer" class="btn-pill btn-sm" style="text-decoration: none;">Поддержка</a>
+        <button class="btn-pill btn-filled btn-sm" onclick="navigateTo('app')">Открыть карту</button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="landing">
+    <div class="dot-grid"></div>
+    <div id="mouseGlow"></div>
+
+    <div class="float-orb" style="width:400px;height:400px;top:15%;left:-8%;background:rgba(102,58,243,0.03);"></div>
+    <div class="float-orb" style="width:300px;height:300px;top:55%;right:-5%;background:rgba(141,214,255,0.025);animation-delay:-8s;"></div>
+    <div class="float-orb" style="width:250px;height:250px;bottom:20%;left:30%;background:rgba(242,185,139,0.02);animation-delay:-14s;"></div>
+
+    <div class="sparkle" style="top:8%;left:12%;animation-delay:0s;"></div>
+    <div class="sparkle blue" style="top:15%;left:78%;animation-delay:1.2s;"></div>
+    <div class="sparkle violet" style="top:22%;left:45%;animation-delay:2.5s;"></div>
+    <div class="sparkle" style="top:35%;left:6%;animation-delay:0.6s;"></div>
+    <div class="sparkle blue" style="top:42%;left:90%;animation-delay:3.1s;"></div>
+    <div class="sparkle violet" style="top:48%;left:25%;animation-delay:1.8s;"></div>
+    <div class="sparkle" style="top:58%;left:70%;animation-delay:0.3s;"></div>
+    <div class="sparkle blue" style="top:65%;left:15%;animation-delay:2.8s;"></div>
+    <div class="sparkle" style="top:72%;left:55%;animation-delay:1.5s;"></div>
+    <div class="sparkle violet" style="top:80%;left:85%;animation-delay:3.5s;"></div>
+    <div class="sparkle blue" style="top:88%;left:35%;animation-delay:0.9s;"></div>
+    <div class="sparkle" style="top:92%;left:62%;animation-delay:2.1s;"></div>
+
+    <div class="light-streak" style="top:10%;left:22%;height:300px;transform:rotate(12deg);"></div>
+    <div class="light-streak" style="top:40%;right:18%;height:250px;transform:rotate(-18deg);"></div>
+    <div class="light-streak" style="top:70%;left:60%;height:200px;transform:rotate(8deg);"></div>
+
+    <div class="network-line h" style="top:32%;left:5%;width:350px;"></div>
+    <div class="network-line h" style="top:55%;right:8%;width:280px;"></div>
+    <div class="network-line v" style="top:18%;left:30%;height:250px;"></div>
+    <div class="network-line v" style="top:50%;right:22%;height:200px;"></div>
+
+    <div class="crosshair" style="top:20%;left:18%;"></div>
+    <div class="crosshair" style="top:45%;right:12%;"></div>
+    <div class="crosshair" style="top:70%;left:40%;"></div>
+    <div class="crosshair" style="top:85%;right:30%;"></div>
+
+    <div class="deco-ring" style="width:70px;height:70px;top:14%;right:12%;border-color:rgba(102,58,243,0.1);animation:levitate 8s ease-in-out infinite;"></div>
+    <div class="deco-ring" style="width:110px;height:110px;top:50%;left:6%;border-color:rgba(141,214,255,0.06);animation:levitateAlt 11s ease-in-out 1.5s infinite;"></div>
+    <div class="deco-ring" style="width:50px;height:50px;top:75%;right:20%;border-color:rgba(242,185,139,0.08);animation:levitate 9s ease-in-out 3s infinite;"></div>
+    <div class="deco-ring" style="width:35px;height:35px;top:38%;left:85%;border-color:rgba(102,58,243,0.07);animation:levitateAlt 7s ease-in-out infinite;"></div>
+    <div class="deco-ring" style="width:90px;height:90px;bottom:12%;left:15%;border-color:rgba(0,229,255,0.05);animation:levitate 13s ease-in-out 4s infinite;"></div>
+
+    <div class="deco-diamond" style="top:28%;right:22%;border-color:rgba(242,185,139,0.12);animation:levitate 7s ease-in-out 1s infinite;"></div>
+    <div class="deco-diamond" style="top:62%;left:12%;border-color:rgba(102,58,243,0.1);animation:levitateAlt 9s ease-in-out infinite;"></div>
+    <div class="deco-diamond" style="top:82%;left:55%;border-color:rgba(141,214,255,0.08);animation:levitate 10s ease-in-out 2.5s infinite;"></div>
+    <div class="deco-diamond" style="top:10%;left:60%;border-color:rgba(0,229,255,0.07);animation:levitateAlt 8s ease-in-out 0.5s infinite;"></div>
+
+    <div class="deco-dot" style="top:18%;left:42%;background:rgba(242,185,139,0.3);animation:levitate 6s ease-in-out infinite;"></div>
+    <div class="deco-dot" style="top:55%;right:30%;background:rgba(102,58,243,0.25);animation:levitateAlt 7s ease-in-out 1s infinite;"></div>
+    <div class="deco-dot" style="top:78%;left:72%;background:rgba(141,214,255,0.25);animation:levitate 8s ease-in-out 2s infinite;"></div>
+    <div class="deco-dot" style="top:35%;left:92%;background:rgba(0,229,255,0.2);animation:levitateAlt 9s ease-in-out infinite;"></div>
+    <div class="deco-dot" style="top:90%;right:45%;background:rgba(242,185,139,0.2);animation:levitate 7s ease-in-out 3s infinite;"></div>
+
+    <div class="deco-bracket" style="top:25%;left:5%;animation:levitate 10s ease-in-out 1s infinite;"></div>
+    <div class="deco-bracket" style="top:60%;right:8%;animation:levitateAlt 12s ease-in-out infinite;"></div>
+    <div class="deco-bracket" style="top:88%;left:25%;animation:levitate 11s ease-in-out 2s infinite;"></div>
+
+    <section class="hero">
+      <div class="hero-glow"></div>
+      <div class="hero-glow-secondary"></div>
+      <div class="hero-eyebrow"><span class="dot"></span> Bishkek Air Quality Monitor</div>
+      <h1>Чистый воздух<br>для <em>Бишкека</em></h1>
+      <p class="hero-sub">Визуализация и симуляция загрязнения воздуха на интерактивной 3D-карте. Анализ ТЭЦ, промышленных объектов, трафика и погодных условий. Локальный расчёт через AI-модель в реальном времени.</p>
+      <div class="hero-actions">
+        <button class="btn-pill btn-filled" onclick="navigateTo('app')">Запустить</button>
+        <a href="#features" class="btn-pill">Подробнее</a>
+      </div>
+    </section>
+
+    <div class="gradient-divider"></div>
+
+    <div class="stats-bar reveal" id="statsBar">
+      <div class="stat-item"><div class="stat-value" data-count="17">0</div><div class="stat-label">Объектов мониторинга</div></div>
+      <div class="stat-item"><div class="stat-value" data-count="36">0</div><div class="stat-label">Сегментов карты</div></div>
+      <div class="stat-item"><div class="stat-value" data-count="15">0</div><div class="stat-label">Дорог с трафиком</div></div>
+      <div class="stat-item"><div class="stat-value">AI</div><div class="stat-label">Советник</div></div>
+    </div>
+
+    <div class="gradient-divider"></div>
+
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-header reveal">
+          <div class="section-label">Возможности</div>
+          <h2 class="section-title">Command Center для воздуха</h2>
+          <p class="section-desc">Три ключевых инструмента для мониторинга, симуляции и анализа качества воздуха в городе</p>
+        </div>
+        <div class="features-grid reveal-stagger">
+          <div class="feature-card reveal">
+            <div class="feature-icon violet">M</div>
+            <h3>Живая 3D-карта</h3>
+            <p>Город разбит на 36 сегментов по сетке улиц. Каждый сегмент окрашивается в реальном времени — от прозрачно-зелёного до пульсирующего красного. Одновременно на карте отображаются потоки ветра и анимированные линии трафика с цветовой индикацией загруженности дорог.</p>
+          </div>
+          <div class="feature-card reveal">
+            <div class="feature-icon blue">S</div>
+            <h3>Интерактивная симуляция</h3>
+            <p>Кликайте по зданиям, ТЭЦ, заводам и паркам на карте. Меняйте их тип и параметры — переводите котельные с угля на газ, снижайте мощность промзон. AI-модель мгновенно пересчитывает уровень загрязнения по каждому сегменту города и обновляет визуализацию.</p>
+          </div>
+          <div class="feature-card reveal">
+            <div class="feature-icon green">A</div>
+            <h3>AI-советник</h3>
+            <p>Интеллектуальный помощник анализирует текущую конфигурацию города и погодные условия. Предоставляет рекомендации по снижению выбросов, оценивает влияние температурной инверсии, направления ветра и осадков на распределение смога.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="gradient-divider"></div>
+
+    <section class="section" id="how-it-works">
+      <div class="container">
+        <div class="section-header reveal">
+          <div class="section-label">Процесс</div>
+          <h2 class="section-title">Три шага к результату</h2>
+          <p class="section-desc">От наблюдения к действию — пошаговый анализ экологической ситуации</p>
+        </div>
+        <div class="steps-grid reveal-stagger">
+          <div class="step-card reveal">
+            <h3>Исследуйте карту</h3>
+            <p>Откройте 3D-карту города. 36 сегментов, разделённых по сетке главных улиц, окрашены по текущему уровню загрязнения. Вращайте камеру, приближайте отдельные районы, наблюдайте за направлением ветра и потоками трафика.</p>
+          </div>
+          <div class="step-card reveal">
+            <h3>Настройте параметры</h3>
+            <p>Переключитесь в режим симуляции. Кликните на ТЭЦ, чтобы перевести её на газ. Измените тип отопления в частном секторе. Закройте загруженную дорогу. Каждое действие мгновенно пересчитывает карту через локальную AI-модель.</p>
+          </div>
+          <div class="step-card reveal">
+            <h3>Получите аналитику</h3>
+            <p>AI-советник оценит ваши изменения и сравнит сценарии. Покажет, какие факторы критичны для каждого сегмента, предложит оптимальную стратегию и рассчитает потенциальное снижение AQI.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="gradient-divider"></div>
+
+    <section class="map-preview-section reveal-scale" id="map-preview">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Предпросмотр</div>
+          <h2 class="section-title">3D-карта города</h2>
+          <p class="section-desc">Кликните по карте, чтобы перейти к основному функционалу Command Center</p>
+        </div>
+        <div class="map-preview-frame" style="cursor:pointer; box-shadow: var(--glow-violet);" onclick="navigateTo('app')">
+          <div id="preview-map" style="pointer-events:none;"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">Domkrat — AI Hub Hackathon 2026</footer>
+  </main>
+
+  <main id="about-view" class="hidden">
+    <div class="dot-grid"></div>
+    <div class="float-orb" style="width:400px;height:400px;top:15%;left:-8%;background:rgba(102,58,243,0.03);"></div>
+    <div class="float-orb" style="width:300px;height:300px;top:55%;right:-5%;background:rgba(141,214,255,0.025);animation-delay:-8s;"></div>
+
+    <section class="hero" style="min-height: auto; padding-top: 160px; padding-bottom: 60px;">
+      <div class="hero-glow"></div>
+      <div class="hero-glow-secondary"></div>
+      <div class="hero-eyebrow"><span class="dot"></span> Команда разработчиков</div>
+      <h1>Мы — <em>3eFear</em></h1>
+      <p class="hero-sub">Создаем решения для улучшения экологии Бишкека. Инновации, аналитика и визуализация данных для чистого будущего.</p>
+    </section>
+
+    <div class="gradient-divider"></div>
+
+    <section class="section" style="padding-top: 60px; padding-bottom: 120px;">
+      <div class="container">
+        <div class="features-grid reveal-stagger">
+          <div class="feature-card reveal">
+            <div class="feature-icon violet">1</div>
+            <h3>Участник 1</h3>
+            <p>Информация появится позже</p>
+          </div>
+          <div class="feature-card reveal">
+            <div class="feature-icon blue">2</div>
+            <h3>Участник 2</h3>
+            <p>Информация появится позже</p>
+          </div>
+          <div class="feature-card reveal">
+            <div class="feature-icon green">3</div>
+            <h3>Участник 3</h3>
+            <p>Информация появится позже</p>
+          </div>
+        </div>
+        <div style="margin-top:80px; display:flex; justify-content:center;" class="reveal">
+          <button class="btn-pill btn-filled" onclick="navigateTo('landing')">&#8592; Назад на главную</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <main id="app-view" class="hidden">
+    <div class="app-layout">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="logo-mark" style="width:26px;height:26px;font-size:11px;border-radius:7px;">&#9672;</div>
+          <span class="sidebar-title">Domkrat</span>
+          <button class="sidebar-collapse-btn" id="sidebarToggle">&#9666;</button>
+        </div>
+        <div class="sidebar-nav">
+          <button class="sidebar-nav-btn active" data-mode="live"><span class="nav-icon">&#9671;</span><span class="nav-label">Карта</span></button>
+          <button class="sidebar-nav-btn" data-mode="edit"><span class="nav-icon">&#9998;</span><span class="nav-label">Симуляция</span></button>
+          <button class="sidebar-nav-btn" data-mode="ai"><span class="nav-icon">&#9678;</span><span class="nav-label">AI</span></button>
+        </div>
+        <div class="sidebar-controls" id="sidebarControls"></div>
+        <div class="sidebar-footer">
+          <button class="btn-pill btn-sm" style="width:100%;justify-content:center;" onclick="navigateTo('landing')">&#8592; Главная</button>
+        </div>
+      </aside>
+
+      <div class="map-area" id="mapArea">
+        <div id="map"></div>
+        <canvas id="windCanvas"></canvas>
+        <div class="map-overlay-aqi hidden" id="aqiOverlay">
+          <svg class="aqi-ring" viewBox="0 0 86 86">
+            <circle cx="43" cy="43" r="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4"/>
+            <circle id="aqiArc" cx="43" cy="43" r="36" fill="none" stroke-width="4" stroke-linecap="round"
+              transform="rotate(-90 43 43)" stroke-dasharray="0 226" stroke="#663af3"/>
+          </svg>
+          <div class="aqi-number" id="aqiNumber">—</div>
+          <div class="aqi-label-text">AQI</div>
+          <div class="aqi-status" id="aqiStatus"></div>
+        </div>
+        <div class="map-overlay-insight hidden" id="insightOverlay">
+          <div class="insight-header">&#10022; Анализ</div>
+          <div class="insight-text" id="insightText"></div>
+        </div>
+      </div>
+
+      <div class="ai-panel hidden" id="aiPanel">
+        <div class="ai-header">
+          <div class="ai-avatar">&#9678;</div>
+          <div class="ai-header-info">
+            <h3>AI Советник</h3>
+            <p>Анализ качества воздуха</p>
+          </div>
+          <div class="ai-status"><span class="ai-status-dot"></span>Online</div>
+        </div>
+        <div class="ai-messages" id="aiMessages">
+          <div class="ai-msg bot">Здравствуйте. Я AI-советник по качеству воздуха. Задайте вопрос о загрязнении, ТЭЦ, влиянии трафика или запросите рекомендации.<div class="ai-msg-time">сейчас</div></div>
+        </div>
+        <div class="ai-input-bar">
+          <input class="ai-input" id="aiInput" type="text" placeholder="Задайте вопрос...">
+          <button class="ai-send-btn" id="aiSendBtn">&#10148;</button>
+        </div>
+      </div>
+
+      <div id="notifContainer" class="notification-container"></div>
+    </div>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -78,3 +78,46 @@ def _fallback(avg_pollution, tec_pct, traffic_pct):
             "✅ Воздух чистый! Стратегия эффективна.\n"
             "Продолжайте мониторинг и развивайте велоинфраструктуру."
         )
+
+SYSTEM_PROMPT = (
+    "Ты — AI-советник по качеству воздуха в Бишкеке. "
+    "Отвечай на русском языке, коротко и по существу. "
+    "Ты знаешь про ТЭЦ Бишкека (крупнейший загрязнитель на угле), "
+    "угольное отопление в частном секторе, автомобильный трафик, "
+    "температурную инверсию зимой и влияние ветра. "
+    "Если спрашивают о конкретных мерах — давай практичные советы."
+)
+
+
+async def chat_with_advisor(user_message: str) -> str:
+    """Свободный чат с AI-советником по экологии Бишкека."""
+    if not client:
+        return _chat_fallback(user_message)
+
+    try:
+        response = await client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_message},
+            ],
+            extra_body={"reasoning": {"enabled": True}}
+        )
+        text = response.choices[0].message.content
+        return text.strip() if text else _chat_fallback(user_message)
+    except Exception as e:
+        print(f"AI Chat: Ошибка API: {e}")
+        return _chat_fallback(user_message)
+
+
+def _chat_fallback(question: str) -> str:
+    t = question.lower()
+    if "тэц" in t or "тепло" in t:
+        return "ТЭЦ Бишкек — крупнейший источник выбросов. На угле даёт до 40% AQI. Перевод на газ снизит выбросы на 60-70%."
+    if "трафик" in t or "проб" in t or "машин" in t:
+        return "Автотранспорт составляет около 35% загрязнения. Развитие электротранспорта и BRT-линий снизит AQI на 30-50 пунктов."
+    if "вет" in t or "погод" in t:
+        return "Ветер — главный природный регулятор. При скорости более 5 м/с смог рассеивается. Зимой температурная инверсия блокирует рассеивание."
+    if "угол" in t or "отоп" in t:
+        return "Угольное отопление даёт до 20% AQI зимой. Перевод частного сектора на газ или электричество кардинально улучшит ситуацию."
+    return "Качество воздуха зависит от ТЭЦ, трафика, отопления и метеоусловий. Задайте конкретный вопрос о любом факторе."

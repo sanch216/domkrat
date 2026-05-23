@@ -1,3 +1,5 @@
+import logging
+
 import httpx
 
 OPEN_METEO_URL = (
@@ -30,6 +32,6 @@ async def get_current_bishkek_weather() -> dict:
             "wind_speed": float(cw["windspeed"]),
             "wind_direction": int(cw["winddirection"]),
         }
-    except Exception:
-        # API недоступен — возвращаем штиль
+    except Exception as e:
+        logging.error("Open-Meteo API failed: %s. Falling back to default weather (calm).", e)
         return DEFAULTS.copy()

@@ -1,15 +1,31 @@
 {
-  "active_mode": "edit",
+  "active_mode": "ai",
   "modified_object": null,
   "city_state": {
-    "tec_1": "gas_converted",
+    "tec_1": "coal_full",
+    "panfilov_park": "active",
+    "ataturk_park": "active",
+    "botanical_garden": "active",
     "private_sector_north": "coal_heating",
-    "botanical_garden": "active"
+    "private_sector_south": "coal_heating",
+    "private_sector_west": "coal_heating",
+    "private_sector_east": "gas_heating",
+    "asanbai": "gas_heating",
+    "traffic_osh_bazaar": "congested",
+    "traffic_south_highway": "moderate",
+    "traffic_chui": "moderate",
+    "traffic_manas": "free_flow",
+    "traffic_east_terminal": "moderate",
+    "factory_north": "full_load",
+    "factory_east": "reduced",
+    "airport": "reduced"
   },
   "weather": {
     "wind_direction": 45,
-    "wind_speed": 3.5,
-    "temperature": -2.0
+    "wind_speed": 2.0,
+    "temperature": -5.0,
+    "weather_type": "clear"
   },
-  "use_real_weather": false
+  "use_real_weather": false,
+  "traffic_level": 50
 }
