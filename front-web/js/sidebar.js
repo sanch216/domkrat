@@ -41,7 +41,7 @@ function renderControls(container) {
     '</div>' +
     '<div id="weather-controls" style="' + (controls.useRealWeather ? 'opacity:0.35;pointer-events:none;' : '') + '">' +
     '<div class="control-group">' +
-      '<div class="control-label"><span>\u0422\u0435\u043c\u043f\u0435\u0440\u0430\u0442\u0443\u0440\u0430</span><span class="control-value" id="val-temp">' + controls.temperature + '&#176;C</span></div>' +
+      '<div class="control-label"><span>\u0422\u0435\u043c\u043f\u0435\u0440\u0430\u0442\u0443\u0440\u0430</span><span class="control-value" id="val-temp">' + controls.temperature + '\u00b0C</span></div>' +
       '<input class="control-slider" type="range" min="-30" max="40" step="1" value="' + controls.temperature + '" id="slider-temp"' + disabledSlider + '>' +
     '</div>' +
     '<div class="control-group">' +
@@ -49,7 +49,7 @@ function renderControls(container) {
       '<input class="control-slider" type="range" min="0" max="50" step="0.5" value="' + controls.windSpeed + '" id="slider-ws"' + disabledSlider + '>' +
     '</div>' +
     '<div class="control-group">' +
-      '<div class="control-label"><span>\u041d\u0430\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u0432\u0435\u0442\u0440\u0430</span><span class="control-value" id="val-wd">' + controls.windDirection + '&#176;</span></div>' +
+      '<div class="control-label"><span>\u041d\u0430\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u0432\u0435\u0442\u0440\u0430</span><span class="control-value" id="val-wd">' + controls.windDirection + '\u00b0</span></div>' +
       '<input class="control-slider" type="range" min="0" max="360" step="5" value="' + controls.windDirection + '" id="slider-wd"' + disabledSlider + '>' +
     '</div>' +
     '<div class="control-group">' +
@@ -70,9 +70,9 @@ function renderControls(container) {
       '<button class="btn-pill btn-filled btn-sm" id="btn-sim" style="width:100%;justify-content:center;">\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c</button>' +
     '</div>';
 
-  bind('slider-temp', 'val-temp', function(v) { controls.temperature = +v; return v + '\u00B0C'; });
+  bind('slider-temp', 'val-temp', function(v) { controls.temperature = +v; return v + '\u00b0C'; });
   bind('slider-ws', 'val-ws', function(v) { controls.windSpeed = +v; return v + ' \u043c/\u0441'; });
-  bind('slider-wd', 'val-wd', function(v) { controls.windDirection = +v; return v + '\u00B0'; });
+  bind('slider-wd', 'val-wd', function(v) { controls.windDirection = +v; return v + '\u00b0'; });
   bind('slider-tr', 'val-tr', function(v) { controls.trafficLevel = +v; return v + '%'; });
 
   var ws = document.getElementById('sel-weather');

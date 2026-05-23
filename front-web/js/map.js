@@ -2,13 +2,13 @@ import { MAPBOX_TOKEN } from './config.js';
 
 const CENTER = [74.59, 42.87];
 
-export const STREET_LATS = [42.828, 42.842, 42.856, 42.870, 42.880, 42.895, 42.910];
-export const STREET_LNGS = [74.535, 74.558, 74.575, 74.592, 74.610, 74.632, 74.660];
+export const STREET_LATS = [42.800, 42.812, 42.824, 42.836, 42.848, 42.858, 42.868, 42.878, 42.888, 42.900, 42.915, 42.930];
+export const STREET_LNGS = [74.480, 74.500, 74.520, 74.540, 74.558, 74.575, 74.592, 74.610, 74.630, 74.650, 74.670, 74.695, 74.720];
 
 let map = null;
 let trafficAnimId = null;
 let trafficDashStep = 0;
-let trafficSpeed = 80;
+let trafficSpeed = 100;
 let segPulseId = null;
 let segPulsePhase = 0;
 
@@ -25,21 +25,26 @@ const DASH_SEQ = [
 const TRAFFIC_ROADS = {
   type: 'FeatureCollection',
   features: [
-    { type: 'Feature', properties: { id: 'chui', name: 'Проспект Чуй', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.540,42.8738],[74.555,42.8738],[74.570,42.8738],[74.585,42.8738],[74.600,42.8738],[74.615,42.8738],[74.630,42.8738],[74.645,42.8738],[74.660,42.8738]] }},
-    { type: 'Feature', properties: { id: 'manas', name: 'Проспект Манаса', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.5828,42.835],[74.5828,42.845],[74.5828,42.855],[74.5828,42.865],[74.5828,42.875],[74.5828,42.885],[74.5828,42.895],[74.5828,42.905]] }},
-    { type: 'Feature', properties: { id: 'south', name: 'Южная магистраль', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.540,42.835],[74.555,42.835],[74.570,42.835],[74.585,42.835],[74.600,42.835],[74.615,42.835],[74.630,42.835],[74.645,42.835],[74.660,42.835]] }},
-    { type: 'Feature', properties: { id: '7apr', name: 'Ул. 7 Апреля', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.605,42.835],[74.605,42.845],[74.605,42.855],[74.605,42.865],[74.605,42.875],[74.605,42.885],[74.605,42.895],[74.605,42.905]] }},
-    { type: 'Feature', properties: { id: 'osh', name: 'Ошский рынок', level: 0.8 }, geometry: { type: 'LineString', coordinates: [[74.585,42.855],[74.590,42.858],[74.595,42.860],[74.600,42.862],[74.605,42.865]] }},
-    { type: 'Feature', properties: { id: 'baytik', name: 'Байтик Баатыра', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.575,42.835],[74.575,42.845],[74.575,42.855],[74.575,42.865],[74.575,42.875],[74.575,42.885],[74.575,42.895],[74.575,42.905]] }},
-    { type: 'Feature', properties: { id: 'jibek', name: 'Жибек Жолу', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.540,42.870],[74.555,42.870],[74.570,42.870],[74.585,42.870],[74.600,42.870],[74.615,42.870],[74.630,42.870],[74.645,42.870],[74.660,42.870]] }},
-    { type: 'Feature', properties: { id: 'toktogul', name: 'Токтогула', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.540,42.876],[74.555,42.876],[74.570,42.876],[74.585,42.876],[74.600,42.876],[74.615,42.876],[74.630,42.876],[74.645,42.876],[74.660,42.876]] }},
-    { type: 'Feature', properties: { id: 'ahunbaeva', name: 'Ахунбаева', level: 0.35 }, geometry: { type: 'LineString', coordinates: [[74.540,42.847],[74.555,42.847],[74.570,42.847],[74.585,42.847],[74.600,42.847],[74.615,42.847],[74.630,42.847],[74.645,42.847],[74.660,42.847]] }},
-    { type: 'Feature', properties: { id: 'togolok', name: 'Тоголок Молдо', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.540,42.892],[74.555,42.892],[74.570,42.892],[74.585,42.892],[74.600,42.892],[74.615,42.892],[74.630,42.892],[74.645,42.892],[74.660,42.892]] }},
-    { type: 'Feature', properties: { id: 'gorkogo', name: 'Горького', level: 0.45 }, geometry: { type: 'LineString', coordinates: [[74.540,42.860],[74.555,42.860],[74.570,42.860],[74.585,42.860],[74.600,42.860],[74.615,42.860],[74.630,42.860],[74.645,42.860],[74.660,42.860]] }},
-    { type: 'Feature', properties: { id: 'moskovskaya', name: 'Московская', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.592,42.835],[74.592,42.845],[74.592,42.855],[74.592,42.865],[74.592,42.875],[74.592,42.885],[74.592,42.895],[74.592,42.905]] }},
-    { type: 'Feature', properties: { id: 'abdrahmanova', name: 'Абдрахманова', level: 0.35 }, geometry: { type: 'LineString', coordinates: [[74.598,42.835],[74.598,42.845],[74.598,42.855],[74.598,42.865],[74.598,42.875],[74.598,42.885],[74.598,42.895],[74.598,42.905]] }},
-    { type: 'Feature', properties: { id: 'sovetskaya', name: 'Советская', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.570,42.835],[74.570,42.845],[74.570,42.855],[74.570,42.865],[74.570,42.875],[74.570,42.885],[74.570,42.895],[74.570,42.905]] }},
-    { type: 'Feature', properties: { id: 'kievskaya', name: 'Киевская', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.540,42.878],[74.555,42.878],[74.570,42.878],[74.585,42.878],[74.600,42.878],[74.615,42.878],[74.630,42.878],[74.645,42.878],[74.660,42.878]] }}
+    // === \u0428\u0438\u0440\u043e\u0442\u043d\u044b\u0435 (\u0437\u0430\u043f\u0430\u0434-\u0432\u043e\u0441\u0442\u043e\u043a) ===
+    { type: 'Feature', properties: { id: 'chui', name: '\u041f\u0440\u043e\u0441\u043f\u0435\u043a\u0442 \u0427\u0443\u0439', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.48,42.874],[74.52,42.874],[74.56,42.874],[74.59,42.874],[74.62,42.874],[74.66,42.874],[74.70,42.874],[74.72,42.874]] }},
+    { type: 'Feature', properties: { id: 'jibek', name: '\u0416\u0438\u0431\u0435\u043a \u0416\u043e\u043b\u0443', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.48,42.871],[74.52,42.871],[74.56,42.871],[74.59,42.871],[74.62,42.871],[74.66,42.871],[74.70,42.871],[74.72,42.871]] }},
+    { type: 'Feature', properties: { id: 'kievskaya', name: '\u041a\u0438\u0435\u0432\u0441\u043a\u0430\u044f', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.48,42.878],[74.52,42.878],[74.56,42.878],[74.59,42.878],[74.62,42.878],[74.66,42.878],[74.70,42.878],[74.72,42.878]] }},
+    { type: 'Feature', properties: { id: 'toktogul', name: '\u0422\u043e\u043a\u0442\u043e\u0433\u0443\u043b\u0430', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.48,42.876],[74.52,42.876],[74.56,42.876],[74.59,42.876],[74.62,42.876],[74.66,42.876],[74.70,42.876],[74.72,42.876]] }},
+    { type: 'Feature', properties: { id: 'gorkogo', name: '\u0413\u043e\u0440\u044c\u043a\u043e\u0433\u043e', level: 0.45 }, geometry: { type: 'LineString', coordinates: [[74.48,42.861],[74.52,42.861],[74.56,42.861],[74.59,42.861],[74.62,42.861],[74.66,42.861],[74.70,42.861],[74.72,42.861]] }},
+    { type: 'Feature', properties: { id: 'south', name: '\u042e\u0436\u043d\u0430\u044f \u043c\u0430\u0433\u0438\u0441\u0442\u0440\u0430\u043b\u044c', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.48,42.836],[74.52,42.836],[74.56,42.836],[74.59,42.836],[74.62,42.836],[74.66,42.836],[74.70,42.836],[74.72,42.836]] }},
+    { type: 'Feature', properties: { id: 'ahunbaeva', name: '\u0410\u0445\u0443\u043d\u0431\u0430\u0435\u0432\u0430', level: 0.35 }, geometry: { type: 'LineString', coordinates: [[74.48,42.847],[74.52,42.847],[74.56,42.847],[74.59,42.847],[74.62,42.847],[74.66,42.847],[74.70,42.847],[74.72,42.847]] }},
+    { type: 'Feature', properties: { id: 'togolok', name: '\u0422\u043e\u0433\u043e\u043b\u043e\u043a \u041c\u043e\u043b\u0434\u043e', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.48,42.892],[74.52,42.892],[74.56,42.892],[74.59,42.892],[74.62,42.892],[74.66,42.892],[74.70,42.892],[74.72,42.892]] }},
+    { type: 'Feature', properties: { id: 'mederova', name: '\u041c\u0435\u0434\u0435\u0440\u043e\u0432\u0430', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.48,42.882],[74.52,42.882],[74.56,42.882],[74.59,42.882],[74.62,42.882],[74.66,42.882],[74.70,42.882],[74.72,42.882]] }},
+    { type: 'Feature', properties: { id: 'isanova', name: '\u0418\u0441\u0430\u043d\u043e\u0432\u0430', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.48,42.855],[74.52,42.855],[74.56,42.855],[74.59,42.855],[74.62,42.855],[74.66,42.855],[74.70,42.855],[74.72,42.855]] }},
+    // === \u0414\u043e\u043b\u0433\u043e\u0442\u043d\u044b\u0435 (\u0441\u0435\u0432\u0435\u0440-\u044e\u0433) ===
+    { type: 'Feature', properties: { id: 'manas', name: '\u041f\u0440\u043e\u0441\u043f\u0435\u043a\u0442 \u041c\u0430\u043d\u0430\u0441\u0430', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.583,42.80],[74.583,42.82],[74.583,42.84],[74.583,42.86],[74.583,42.88],[74.583,42.90],[74.583,42.93]] }},
+    { type: 'Feature', properties: { id: 'moskovskaya', name: '\u041c\u043e\u0441\u043a\u043e\u0432\u0441\u043a\u0430\u044f', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.592,42.80],[74.592,42.82],[74.592,42.84],[74.592,42.86],[74.592,42.88],[74.592,42.90],[74.592,42.93]] }},
+    { type: 'Feature', properties: { id: 'abdrahmanova', name: '\u0410\u0431\u0434\u0440\u0430\u0445\u043c\u0430\u043d\u043e\u0432\u0430', level: 0.35 }, geometry: { type: 'LineString', coordinates: [[74.598,42.80],[74.598,42.82],[74.598,42.84],[74.598,42.86],[74.598,42.88],[74.598,42.90],[74.598,42.93]] }},
+    { type: 'Feature', properties: { id: 'baytik', name: '\u0411\u0430\u0439\u0442\u0438\u043a \u0411\u0430\u0430\u0442\u044b\u0440\u0430', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.575,42.80],[74.575,42.82],[74.575,42.84],[74.575,42.86],[74.575,42.88],[74.575,42.90],[74.575,42.93]] }},
+    { type: 'Feature', properties: { id: 'sovetskaya', name: '\u0421\u043e\u0432\u0435\u0442\u0441\u043a\u0430\u044f', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.570,42.80],[74.570,42.82],[74.570,42.84],[74.570,42.86],[74.570,42.88],[74.570,42.90],[74.570,42.93]] }},
+    { type: 'Feature', properties: { id: '7apr', name: '\u0423\u043b. 7 \u0410\u043f\u0440\u0435\u043b\u044f', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.607,42.80],[74.607,42.82],[74.607,42.84],[74.607,42.86],[74.607,42.88],[74.607,42.90],[74.607,42.93]] }},
+    // === \u041e\u0448\u0441\u043a\u0438\u0439 \u0440\u044b\u043d\u043e\u043a ===
+    { type: 'Feature', properties: { id: 'osh', name: '\u041e\u0448\u0441\u043a\u0438\u0439 \u0440\u044b\u043d\u043e\u043a', level: 0.8 }, geometry: { type: 'LineString', coordinates: [[74.585,42.855],[74.590,42.858],[74.595,42.860],[74.600,42.862],[74.605,42.865]] }}
   ]
 };
 
@@ -177,9 +182,9 @@ function addTrafficLayer() {
         0.6, '#ff8709',
         1.0, '#e53935'
       ],
-      'line-width': 10,
-      'line-opacity': 0.08,
-      'line-blur': 8
+      'line-width': 6,
+      'line-opacity': 0.04,
+      'line-blur': 6
     }
   });
 
@@ -195,8 +200,8 @@ function addTrafficLayer() {
         0.6, '#ff8709',
         1.0, '#e53935'
       ],
-      'line-width': 2.5,
-      'line-opacity': 0.6
+      'line-width': 1.2,
+      'line-opacity': 0.3
     },
     layout: { 'line-cap': 'round', 'line-join': 'round' }
   });
@@ -213,8 +218,8 @@ function addTrafficLayer() {
         0.6, '#ff8709',
         1.0, '#e53935'
       ],
-      'line-width': 2,
-      'line-opacity': 0.9,
+      'line-width': 1,
+      'line-opacity': 0.5,
       'line-dasharray': [0, 4, 3]
     },
     layout: { 'line-cap': 'butt', 'line-join': 'round' }

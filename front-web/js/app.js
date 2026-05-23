@@ -300,6 +300,9 @@ function initApp() {
       initSidebar(runSimulation);
       initModeButtons();
       initAiChat();
+      // Bind analysis button from nav
+      var analysisBtn = document.getElementById('btn-analysis');
+      if (analysisBtn) analysisBtn.addEventListener('click', requestAiAnalysis);
       connectWs();
       switchMode('live');
     }
@@ -461,7 +464,42 @@ function updateAqi(aqi) {
 }
 
 // ---------------------------------------------------------------------------
-// AI Chat \u2014 real backend call via /api/v1/chat
+// AI Analysis — on-demand analysis button
+// ---------------------------------------------------------------------------
+function requestAiAnalysis() {
+  var c = getControls();
+  var cityState = getCityState();
+  var it = document.getElementById('insightText');
+  var io = document.getElementById('insightOverlay');
+
+  // Show loading
+  if (it) it.textContent = '🔮 Анализирую...';
+  if (io) io.classList.remove('hidden');
+
+  var prompt = 'Проанализируй текущую ситуацию: ' +
+    'Температура ' + c.temperature + '\u00b0C, ' +
+    'Ветер ' + c.windSpeed + ' м/с (' + c.windDirection + '\u00b0), ' +
+    'Погода: ' + c.weather + ', ' +
+    'Трафик: ' + c.trafficLevel + '%. ' +
+    'Объекты: ' + JSON.stringify(cityState) + '. ' +
+    'Дай 2-3 коротких совета мэру.';
+
+  fetch(API_URL + '/api/v1/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: prompt })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (it) it.textContent = data.reply || 'Нет ответа от AI.';
+  })
+  .catch(function() {
+    if (it) it.textContent = 'Ошибка подключения к AI.';
+  });
+}
+
+// ---------------------------------------------------------------------------
+// AI Chat — real backend call via /api/v1/chat
 // ---------------------------------------------------------------------------
 function initAiChat() {
   var inp = document.getElementById('aiInput');

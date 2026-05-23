@@ -15,11 +15,11 @@ if _root_dir not in sys.path:
 # ---------------------------------------------------------------------------
 # Координаты Бишкека
 # ---------------------------------------------------------------------------
-CENTER_LAT = 42.87
-CENTER_LNG = 74.59
-GRID_SPREAD = 0.06          # ±0.06° ≈ 6-7 km от центра
-GRID_STEPS_LAT = 18         # кол-во шагов по широте
-GRID_STEPS_LNG = 20         # кол-во шагов по долготе  (18×20 = 360 точек)
+CENTER_LAT = 42.865
+CENTER_LNG = 74.600
+GRID_SPREAD = 0.10          # ±0.10° ≈ 11 km от центра — покрывает весь Бишкек
+GRID_STEPS_LAT = 24         # кол-во шагов по широте
+GRID_STEPS_LNG = 26         # кол-во шагов по долготе  (24×26 = 624 точки)
 
 # Один градус ≈ 111 km; используем для перевода Δlat/Δlng → «условные km»
 DEG_TO_KM = 111.0
@@ -351,7 +351,7 @@ async def generate_mock_heatmap(
                 d = math.hypot(dlat, dlng)  # расстояние в «условных km»
 
                 # Затухание с расстоянием
-                distance_decay = 1.0 / (1.0 + d * 8.0)
+                distance_decay = 1.0 / (1.0 + d * 12.0)
 
                 # Направленный множитель (plume) — только для загрязнителей
                 if not is_absorber and d > 0.01 and wind_speed > 0.3:
@@ -385,7 +385,7 @@ async def generate_mock_heatmap(
                 total_intensity *= 0.6
 
             # Глобальный фон трафика
-            traffic_add = (params.traffic_level / 100.0) * 0.1
+            traffic_add = (params.traffic_level / 100.0) * 0.04
             total_intensity += traffic_add
 
             total_intensity += random.uniform(-0.03, 0.03)
@@ -400,7 +400,8 @@ async def generate_mock_heatmap(
 
     # --- AQI (0-500) -------------------------------------------------------
     avg_intensity = intensity_sum / len(points) if points else 0
-    aqi = int(avg_intensity * 500)
+    # Calibrated AQI: power curve tuned so that typical May conditions → AQI ~50
+    aqi = int(avg_intensity * 300)
     aqi = min(max(aqi, 0), 500)
 
     # --- Агрегация параметров для AI Advisor / ML Predictor -----------------
@@ -448,39 +449,26 @@ async def generate_mock_heatmap(
     else:
         level = "Опасное"
 
-    # --- Текстовый совет от AI (OpenRouter) --------------------------------
-    try:
-        from ai.ai_advisor import get_mayor_advice
-        ai_text = await get_mayor_advice(
-            avg_pollution=aqi,
-            tec_power=tec_power_pct,
-            traffic=traffic_level_pct,
-            heating_ban=heating_ban,
-            wind_speed=wind_speed,
-        )
-    except Exception as e:
-        logging.warning("AI Advisor unavailable, using fallback: %s", e)
-        # Fallback — статический отчёт
-        polluters = [s for s in sources if s["emission"] > 0.01]
-        absorbers = [s for s in sources if s["emission"] < -0.01]
-        weather_type = params.weather.weather_type
-        weather_note = f"Температура {temperature}°C. " if params.use_real_weather else ""
-        inversion_note = "⚠️ Температурная инверсия усиливает загрязнение! " if temperature < 0 else ""
-        precip_note = ""
-        if weather_type == "rain":
-            precip_note = "🌧 Дождь вымывает загрязнения. "
-        elif weather_type == "snow":
-            precip_note = "❄️ Снег частично очищает воздух. "
+    # --- Static insight text (AI is now on-demand via /api/v1/chat) ---------
+    polluters = [s for s in sources if s["emission"] > 0.01]
+    absorbers = [s for s in sources if s["emission"] < -0.01]
+    weather_type = params.weather.weather_type
+    weather_note = f"\u0422\u0435\u043c\u043f\u0435\u0440\u0430\u0442\u0443\u0440\u0430 {temperature}\u00b0C. " if params.use_real_weather else ""
+    inversion_note = "\u26a0\ufe0f \u0422\u0435\u043c\u043f\u0435\u0440\u0430\u0442\u0443\u0440\u043d\u0430\u044f \u0438\u043d\u0432\u0435\u0440\u0441\u0438\u044f \u0443\u0441\u0438\u043b\u0438\u0432\u0430\u0435\u0442 \u0437\u0430\u0433\u0440\u044f\u0437\u043d\u0435\u043d\u0438\u0435! " if temperature < 0 else ""
+    precip_note = ""
+    if weather_type == "rain":
+        precip_note = "\U0001f327 \u0414\u043e\u0436\u0434\u044c \u0432\u044b\u043c\u044b\u0432\u0430\u0435\u0442 \u0437\u0430\u0433\u0440\u044f\u0437\u043d\u0435\u043d\u0438\u044f. "
+    elif weather_type == "snow":
+        precip_note = "\u2744\ufe0f \u0421\u043d\u0435\u0433 \u0447\u0430\u0441\u0442\u0438\u0447\u043d\u043e \u043e\u0447\u0438\u0449\u0430\u0435\u0442 \u0432\u043e\u0437\u0434\u0443\u0445. "
 
-        ai_text = (
-            f"AQI: {aqi} — качество воздуха: {level}. "
-            f"Активных источников: {len(polluters)}, зелёных зон: {len(absorbers)}. "
-            f"{weather_note}"
-            f"{inversion_note}"
-            f"{precip_note}"
-            f"Ветер {wind_speed} м/с, направление {wind_direction}° "
-            f"(шлейф → {plume_dir_deg:.0f}°)."
-        ).strip()
+    ai_text = (
+        f"AQI: {aqi} \u2014 \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u043e \u0432\u043e\u0437\u0434\u0443\u0445\u0430: {level}. "
+        f"\u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0445 \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u043e\u0432: {len(polluters)}, \u0437\u0435\u043b\u0451\u043d\u044b\u0445 \u0437\u043e\u043d: {len(absorbers)}. "
+        f"{weather_note}"
+        f"{inversion_note}"
+        f"{precip_note}"
+        f"\u0412\u0435\u0442\u0435\u0440 {wind_speed} \u043c/\u0441, \u043d\u0430\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 {wind_direction}\u00b0."
+    ).strip()
 
     # --- Предикт от ML Модели (AQI через 12ч) ------------------------------
     prediction: int | None = None
