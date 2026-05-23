@@ -281,6 +281,12 @@ async def generate_mock_heatmap(
     heating_ban = not coal_active
 
     # --- Текстовый совет от AI (OpenRouter) ---
+    import sys
+    import os
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if root_dir not in sys.path:
+        sys.path.append(root_dir)
+        
     try:
         from ai.ai_advisor import get_mayor_advice
         ai_text = await get_mayor_advice(
