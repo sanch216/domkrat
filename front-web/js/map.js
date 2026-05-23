@@ -1,4 +1,5 @@
 import { MAPBOX_TOKEN } from './config.js';
+import { TRAFFIC_ROADS } from './new_roads.js';
 
 const CENTER = [74.59, 42.87];
 
@@ -22,31 +23,7 @@ const DASH_SEQ = [
   [0, 3, 3, 1]
 ];
 
-const TRAFFIC_ROADS = {
-  type: 'FeatureCollection',
-  features: [
-    // === \u0428\u0438\u0440\u043e\u0442\u043d\u044b\u0435 (\u0437\u0430\u043f\u0430\u0434-\u0432\u043e\u0441\u0442\u043e\u043a) ===
-    { type: 'Feature', properties: { id: 'chui', name: '\u041f\u0440\u043e\u0441\u043f\u0435\u043a\u0442 \u0427\u0443\u0439', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.48,42.874],[74.52,42.874],[74.56,42.874],[74.59,42.874],[74.62,42.874],[74.66,42.874],[74.70,42.874],[74.72,42.874]] }},
-    { type: 'Feature', properties: { id: 'jibek', name: '\u0416\u0438\u0431\u0435\u043a \u0416\u043e\u043b\u0443', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.48,42.871],[74.52,42.871],[74.56,42.871],[74.59,42.871],[74.62,42.871],[74.66,42.871],[74.70,42.871],[74.72,42.871]] }},
-    { type: 'Feature', properties: { id: 'kievskaya', name: '\u041a\u0438\u0435\u0432\u0441\u043a\u0430\u044f', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.48,42.878],[74.52,42.878],[74.56,42.878],[74.59,42.878],[74.62,42.878],[74.66,42.878],[74.70,42.878],[74.72,42.878]] }},
-    { type: 'Feature', properties: { id: 'toktogul', name: '\u0422\u043e\u043a\u0442\u043e\u0433\u0443\u043b\u0430', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.48,42.876],[74.52,42.876],[74.56,42.876],[74.59,42.876],[74.62,42.876],[74.66,42.876],[74.70,42.876],[74.72,42.876]] }},
-    { type: 'Feature', properties: { id: 'gorkogo', name: '\u0413\u043e\u0440\u044c\u043a\u043e\u0433\u043e', level: 0.45 }, geometry: { type: 'LineString', coordinates: [[74.48,42.861],[74.52,42.861],[74.56,42.861],[74.59,42.861],[74.62,42.861],[74.66,42.861],[74.70,42.861],[74.72,42.861]] }},
-    { type: 'Feature', properties: { id: 'south', name: '\u042e\u0436\u043d\u0430\u044f \u043c\u0430\u0433\u0438\u0441\u0442\u0440\u0430\u043b\u044c', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.48,42.836],[74.52,42.836],[74.56,42.836],[74.59,42.836],[74.62,42.836],[74.66,42.836],[74.70,42.836],[74.72,42.836]] }},
-    { type: 'Feature', properties: { id: 'ahunbaeva', name: '\u0410\u0445\u0443\u043d\u0431\u0430\u0435\u0432\u0430', level: 0.35 }, geometry: { type: 'LineString', coordinates: [[74.48,42.847],[74.52,42.847],[74.56,42.847],[74.59,42.847],[74.62,42.847],[74.66,42.847],[74.70,42.847],[74.72,42.847]] }},
-    { type: 'Feature', properties: { id: 'togolok', name: '\u0422\u043e\u0433\u043e\u043b\u043e\u043a \u041c\u043e\u043b\u0434\u043e', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.48,42.892],[74.52,42.892],[74.56,42.892],[74.59,42.892],[74.62,42.892],[74.66,42.892],[74.70,42.892],[74.72,42.892]] }},
-    { type: 'Feature', properties: { id: 'mederova', name: '\u041c\u0435\u0434\u0435\u0440\u043e\u0432\u0430', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.48,42.882],[74.52,42.882],[74.56,42.882],[74.59,42.882],[74.62,42.882],[74.66,42.882],[74.70,42.882],[74.72,42.882]] }},
-    { type: 'Feature', properties: { id: 'isanova', name: '\u0418\u0441\u0430\u043d\u043e\u0432\u0430', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.48,42.855],[74.52,42.855],[74.56,42.855],[74.59,42.855],[74.62,42.855],[74.66,42.855],[74.70,42.855],[74.72,42.855]] }},
-    // === \u0414\u043e\u043b\u0433\u043e\u0442\u043d\u044b\u0435 (\u0441\u0435\u0432\u0435\u0440-\u044e\u0433) ===
-    { type: 'Feature', properties: { id: 'manas', name: '\u041f\u0440\u043e\u0441\u043f\u0435\u043a\u0442 \u041c\u0430\u043d\u0430\u0441\u0430', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.583,42.80],[74.583,42.82],[74.583,42.84],[74.583,42.86],[74.583,42.88],[74.583,42.90],[74.583,42.93]] }},
-    { type: 'Feature', properties: { id: 'moskovskaya', name: '\u041c\u043e\u0441\u043a\u043e\u0432\u0441\u043a\u0430\u044f', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.592,42.80],[74.592,42.82],[74.592,42.84],[74.592,42.86],[74.592,42.88],[74.592,42.90],[74.592,42.93]] }},
-    { type: 'Feature', properties: { id: 'abdrahmanova', name: '\u0410\u0431\u0434\u0440\u0430\u0445\u043c\u0430\u043d\u043e\u0432\u0430', level: 0.35 }, geometry: { type: 'LineString', coordinates: [[74.598,42.80],[74.598,42.82],[74.598,42.84],[74.598,42.86],[74.598,42.88],[74.598,42.90],[74.598,42.93]] }},
-    { type: 'Feature', properties: { id: 'baytik', name: '\u0411\u0430\u0439\u0442\u0438\u043a \u0411\u0430\u0430\u0442\u044b\u0440\u0430', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.575,42.80],[74.575,42.82],[74.575,42.84],[74.575,42.86],[74.575,42.88],[74.575,42.90],[74.575,42.93]] }},
-    { type: 'Feature', properties: { id: 'sovetskaya', name: '\u0421\u043e\u0432\u0435\u0442\u0441\u043a\u0430\u044f', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.570,42.80],[74.570,42.82],[74.570,42.84],[74.570,42.86],[74.570,42.88],[74.570,42.90],[74.570,42.93]] }},
-    { type: 'Feature', properties: { id: '7apr', name: '\u0423\u043b. 7 \u0410\u043f\u0440\u0435\u043b\u044f', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.607,42.80],[74.607,42.82],[74.607,42.84],[74.607,42.86],[74.607,42.88],[74.607,42.90],[74.607,42.93]] }},
-    // === \u041e\u0448\u0441\u043a\u0438\u0439 \u0440\u044b\u043d\u043e\u043a ===
-    { type: 'Feature', properties: { id: 'osh', name: '\u041e\u0448\u0441\u043a\u0438\u0439 \u0440\u044b\u043d\u043e\u043a', level: 0.8 }, geometry: { type: 'LineString', coordinates: [[74.585,42.855],[74.590,42.858],[74.595,42.860],[74.600,42.862],[74.605,42.865]] }}
-  ]
-};
+// TRAFFIC_ROADS imported from new_roads.js
 
 function generateSegments(intensities) {
   var features = [];

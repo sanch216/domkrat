@@ -1,0 +1,6 @@
+[out:json];
+area["name:en"="Bishkek"]->.searchArea;
+(
+  way["name"~"Чуй|Жибек|Киевская|Токтогула|Горького|Ахунбаева|Токомбаева|Масалиева|Тоголок|Медерова|Исанова|Манаса|Айтматова|Московская|Абдрахманова|Байтик|7 Апреля"](area.searchArea)["highway"~"primary|secondary|tertiary|trunk"];
+);
+out geom;

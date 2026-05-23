@@ -26,6 +26,6 @@
     "temperature": -5.0,
     "weather_type": "clear"
   },
-  "use_real_weather": false,
+  "use_real_weather": true,
   "traffic_level": 50
 }

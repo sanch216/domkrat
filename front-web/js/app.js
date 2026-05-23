@@ -126,8 +126,6 @@ function connectWs() {
         if (data.predicted_aqi !== undefined && data.predicted_aqi !== null) {
           text += ' \ud83d\udcca \u041f\u0440\u043e\u0433\u043d\u043e\u0437 AQI \u0447\u0435\u0440\u0435\u0437 12\u0447: ' + data.predicted_aqi;
         }
-        if (it) it.textContent = text;
-        if (io) io.classList.remove('hidden');
       }
     } catch (e) {
       console.warn('[WS] Parse error:', e);
@@ -295,7 +293,7 @@ function initApp() {
     pitch: 50,
     bearing: -15,
     onLoad: function() {
-      windSystem = new WindSystem(document.getElementById('windCanvas'));
+      windSystem = new WindSystem(document.getElementById('windCanvas'), getMap());
       windSystem.init();
       initSidebar(runSimulation);
       initModeButtons();
@@ -311,12 +309,23 @@ function initApp() {
 
 function initModeButtons() {
   document.querySelectorAll('.sidebar-nav-btn').forEach(function(btn) {
+    if (!btn.dataset.mode) return; // Skip buttons that don't switch modes (like Analysis)
     btn.addEventListener('click', function() {
-      document.querySelectorAll('.sidebar-nav-btn').forEach(function(b) { b.classList.remove('active'); });
+      // Remove active from mode buttons only
+      document.querySelectorAll('.sidebar-nav-btn[data-mode]').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
       switchMode(btn.dataset.mode);
     });
   });
+
+  // Bind close button for insight overlay
+  var closeBtn = document.getElementById('closeInsightBtn');
+  var overlay = document.getElementById('insightOverlay');
+  if (closeBtn && overlay) {
+    closeBtn.addEventListener('click', function() {
+      overlay.classList.add('hidden');
+    });
+  }
 }
 
 function switchMode(mode) {
@@ -349,7 +358,6 @@ function switchMode(mode) {
     clearSmogSegments();
     resetView();
     aqiOv.classList.remove('hidden');
-    insOv.classList.remove('hidden');
     runSimulation();
     // Auto-refresh every 15 seconds
     liveInterval = setInterval(runSimulation, 15000);
@@ -357,13 +365,12 @@ function switchMode(mode) {
     showEditControls();
     if (mapEl) addMarkers(mapEl, runSimulation);
     aqiOv.classList.remove('hidden');
-    insOv.classList.remove('hidden');
-    window.showNotification('\u0420\u0435\u0436\u0438\u043c \u0441\u0438\u043c\u0443\u043b\u044f\u0446\u0438\u0438', 'info');
+    window.showNotification('Режим симуляции', 'info');
   }
 }
 
 // ---------------------------------------------------------------------------
-// Simulation \u2014 collect data and send via WebSocket
+// Simulation — collect data and send via WebSocket
 // ---------------------------------------------------------------------------
 function runSimulation() {
   var c = getControls();
