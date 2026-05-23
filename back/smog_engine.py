@@ -127,6 +127,32 @@ OBJECT_REGISTRY: dict[str, dict] = {
             "destroyed": 0.05,
         },
     },
+    "panfilov_park": {
+        "lat": 42.877, "lng": 74.598,
+        "statuses": {"active": -0.2, "destroyed": 0.0}
+    },
+    "ataturk_park": {
+        "lat": 42.842, "lng": 74.588,
+        "statuses": {"active": -0.2, "destroyed": 0.0}
+    },
+    "karagachevaya_grove": {
+        "lat": 42.898, "lng": 74.615,
+        "statuses": {"active": -0.5, "destroyed": 0.1} # Самый мощный "очиститель" на севере
+    },
+    "korea_friendship_park": {
+        "lat": 42.844, "lng": 74.586,  # Примерные координаты на Ахунбаева
+        "statuses": {
+            "active": -0.1, 
+            "destroyed": 0.05
+        }
+    },
+    "togolok_moldo_square": {
+        "lat": 42.872, "lng": 74.594,  # Центр
+        "statuses": {
+            "active": -0.05,  # Очень слабое поглощение, так как он маленький
+            "destroyed": 0.02
+        }
+    }
 }
 
 
