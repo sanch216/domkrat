@@ -23,12 +23,13 @@ app.add_middleware(
 async def simulate(params: SimulationParams) -> SimulationResponse:
     """Принимает параметры симуляции, сохраняет состояние и возвращает результат."""
     await save_state(params)
-    heatmap_data, aqi, ai_text = await generate_mock_heatmap(params)
+    heatmap_data, aqi, ai_text, prediction = await generate_mock_heatmap(params)
     return SimulationResponse(
         status="ok",
         aqi=aqi,
         heatmap_data=heatmap_data,
         ai_insight=ai_text,
+        predicted_aqi=prediction,
     )
 
 
@@ -41,12 +42,13 @@ async def ws_simulate(websocket: WebSocket) -> None:
             data = await websocket.receive_text()
             params = SimulationParams.model_validate_json(data)
             await save_state(params)
-            points, aqi, ai_text = await generate_mock_heatmap(params)
+            points, aqi, ai_text, prediction = await generate_mock_heatmap(params)
             response = SimulationResponse(
                 status="ok",
                 aqi=aqi,
                 heatmap_data=points,
                 ai_insight=ai_text,
+                predicted_aqi=prediction,
             )
             await websocket.send_json(response.model_dump())
     except WebSocketDisconnect:

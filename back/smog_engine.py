@@ -320,5 +320,18 @@ async def generate_mock_heatmap(
             f"(шлейф → {plume_dir_deg:.0f}°)."
         ).strip()
 
-    return points, aqi, ai_text
+    # --- Предикт от ML Модели ---
+    try:
+        from ai.smog_predictor import predict_future_aqi
+        prediction = predict_future_aqi(
+            current_aqi=aqi,
+            tec_power=tec_power_pct / 100.0 if tec_power_pct > 1 else tec_power_pct,
+            traffic=traffic_level_pct / 100.0 if traffic_level_pct > 1 else traffic_level_pct,
+            heating_ban=heating_ban,
+            wind_speed=wind_speed
+        )
+    except Exception as e:
+        print(f"Ошибка вызова ML Predictor: {e}")
+        prediction = None
 
+    return points, aqi, ai_text, prediction
