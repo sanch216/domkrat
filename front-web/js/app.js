@@ -28,10 +28,14 @@ function connectWs() {
       var data = JSON.parse(event.data);
       if (data.heatmap_data) updateSmogSegments(data.heatmap_data);
       if (data.aqi !== undefined) updateAqi(data.aqi);
-      if (data.ai_insight) {
+      if (data.ai_insight || data.predicted_aqi !== null) {
         var it = document.getElementById('insightText');
         var io = document.getElementById('insightOverlay');
-        if (it) it.textContent = data.ai_insight;
+        var text = data.ai_insight || '';
+        if (data.predicted_aqi !== undefined && data.predicted_aqi !== null) {
+          text += ' \ud83d\udcca \u041f\u0440\u043e\u0433\u043d\u043e\u0437 AQI \u0447\u0435\u0440\u0435\u0437 12\u0447: ' + data.predicted_aqi;
+        }
+        if (it) it.textContent = text;
         if (io) io.classList.remove('hidden');
       }
     } catch (e) {
@@ -56,7 +60,7 @@ function sendWs(data) {
 }
 
 // ---------------------------------------------------------------------------
-// Навигация Landing ↔ App
+// Навигация Landing <-> App
 // ---------------------------------------------------------------------------
 window.navigateTo = function(view) {
   var landing = document.getElementById('landing');
@@ -76,7 +80,7 @@ window.navigateTo = function(view) {
 };
 
 // ---------------------------------------------------------------------------
-// Landing — анимации (без изменений)
+// Landing — анимации
 // ---------------------------------------------------------------------------
 function initNavbar() {
   var toggle = document.getElementById('navToggle');
@@ -203,6 +207,8 @@ function initModeButtons() {
   });
 }
 
+var liveInterval = null;
+
 function switchMode(mode) {
   currentMode = mode;
   var mapEl = getMap();
@@ -210,6 +216,9 @@ function switchMode(mode) {
   var aiPanel = document.getElementById('aiPanel');
   var aqiOv = document.getElementById('aqiOverlay');
   var insOv = document.getElementById('insightOverlay');
+
+  // Останавливаем авто-обновление при смене режима
+  if (liveInterval) { clearInterval(liveInterval); liveInterval = null; }
 
   if (mode === 'ai') {
     mapArea.classList.add('hidden');
@@ -229,6 +238,8 @@ function switchMode(mode) {
     aqiOv.classList.remove('hidden');
     insOv.classList.remove('hidden');
     runSimulation();
+    // Авто-обновление каждые 15 секунд
+    liveInterval = setInterval(runSimulation, 15000);
   } else if (mode === 'edit') {
     showEditControls();
     if (mapEl) addMarkers(mapEl, runSimulation);
@@ -286,11 +297,11 @@ function updateAqi(aqi) {
   arc.setAttribute('stroke-dasharray', (circ * prog) + ' ' + circ);
 
   var color, label;
-  if (aqi <= 50) { color = '#0ae448'; label = 'Хорошо'; }
-  else if (aqi <= 100) { color = '#8dd6ff'; label = 'Умеренно'; }
-  else if (aqi <= 150) { color = '#ff8709'; label = 'Нездоровое'; }
-  else if (aqi <= 200) { color = '#e53935'; label = 'Плохое'; }
-  else { color = '#a0142a'; label = 'Опасное'; }
+  if (aqi <= 50) { color = '#0ae448'; label = '\u0425\u043e\u0440\u043e\u0448\u043e'; }
+  else if (aqi <= 100) { color = '#8dd6ff'; label = '\u0423\u043c\u0435\u0440\u0435\u043d\u043d\u043e'; }
+  else if (aqi <= 150) { color = '#ff8709'; label = '\u041d\u0435\u0437\u0434\u043e\u0440\u043e\u0432\u043e\u0435'; }
+  else if (aqi <= 200) { color = '#e53935'; label = '\u041f\u043b\u043e\u0445\u043e\u0435'; }
+  else { color = '#a0142a'; label = '\u041e\u043f\u0430\u0441\u043d\u043e\u0435'; }
 
   num.style.color = color;
   arc.setAttribute('stroke', color);
@@ -300,7 +311,7 @@ function updateAqi(aqi) {
 }
 
 // ---------------------------------------------------------------------------
-// AI Chat
+// AI Chat — реальный вызов бэкенда через /api/v1/chat
 // ---------------------------------------------------------------------------
 function initAiChat() {
   var inp = document.getElementById('aiInput');
@@ -320,10 +331,20 @@ function initAiChat() {
     msgs.appendChild(dots);
     msgs.scrollTop = msgs.scrollHeight;
 
-    setTimeout(function() {
+    fetch(API_URL + '/api/v1/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
       dots.remove();
-      appendMsg(msgs, aiReply(text), false);
-    }, 700 + Math.random() * 800);
+      appendMsg(msgs, data.reply || '\u041d\u0435\u0442 \u043e\u0442\u0432\u0435\u0442\u0430 \u043e\u0442 AI.', false);
+    })
+    .catch(function() {
+      dots.remove();
+      appendMsg(msgs, '\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f \u043a AI.', false);
+    });
   };
 
   btn.addEventListener('click', send);
@@ -338,19 +359,6 @@ function appendMsg(c, text, isUser) {
   d.innerHTML = text + '<div class="ai-msg-time">' + ts + '</div>';
   c.appendChild(d);
   c.scrollTop = c.scrollHeight;
-}
-
-function aiReply(q) {
-  var t = q.toLowerCase();
-  if (t.indexOf('\u0442\u044d\u0446') >= 0 || t.indexOf('\u0442\u0435\u043f\u043b\u043e') >= 0)
-    return 'ТЭЦ Бишкек — крупнейший источник выбросов. На угле даёт до 40% AQI. Перевод на газ снизит выбросы на 60-70%. Рекомендую поэтапную модернизацию с установкой электрофильтров.';
-  if (t.indexOf('\u0442\u0440\u0430\u0444\u0438\u043a') >= 0 || t.indexOf('\u043f\u0440\u043e\u0431') >= 0 || t.indexOf('\u043c\u0430\u0448\u0438\u043d') >= 0)
-    return 'Автотранспорт составляет около 35% загрязнения. Основные узлы: Ошский базар, Проспект Чуй. Развитие электротранспорта и BRT-линий снизит AQI на 30-50 пунктов.';
-  if (t.indexOf('\u0432\u0435\u0442') >= 0 || t.indexOf('\u043f\u043e\u0433\u043e\u0434') >= 0)
-    return 'Ветер — главный природный регулятор. При скорости более 5 м/с смог рассеивается. Бишкек расположен в котловине — зимой температурная инверсия блокирует вертикальное рассеивание.';
-  if (t.indexOf('\u0443\u0433\u043e\u043b') >= 0 || t.indexOf('\u043e\u0442\u043e\u043f') >= 0)
-    return 'Угольное отопление даёт до 20% AQI зимой. Перевод частного сектора на газ или электричество кардинально улучшит ситуацию в жилых районах.';
-  return 'Качество воздуха зависит от ТЭЦ, трафика, отопления и метеоусловий. Задайте конкретный вопрос о любом факторе для детального анализа.';
 }
 
 // ---------------------------------------------------------------------------

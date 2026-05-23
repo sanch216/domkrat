@@ -1,9 +1,16 @@
 import logging
 import math
+import os
 import random
+import sys
 
 from schemas import SimulationParams, HeatmapPoint
 from weather_service import get_current_bishkek_weather
+
+# Добавляем корень проекта в sys.path для импорта ai/
+_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _root_dir not in sys.path:
+    sys.path.append(_root_dir)
 
 # ---------------------------------------------------------------------------
 # Координаты Бишкека
@@ -278,7 +285,7 @@ OBJECT_REGISTRY: dict[str, dict] = {
 # ---------------------------------------------------------------------------
 async def generate_mock_heatmap(
     params: SimulationParams,
-) -> tuple[list[HeatmapPoint], int, str]:
+) -> tuple[list[HeatmapPoint], int, str, int | None]:
     """Gaussian-plume симуляция смога Бишкека на основе city_state."""
 
     # --- Погода ------------------------------------------------------------
@@ -396,7 +403,38 @@ async def generate_mock_heatmap(
     aqi = int(avg_intensity * 500)
     aqi = min(max(aqi, 0), 500)
 
-    # --- Текстовый отчёт ---------------------------------------------------
+    # --- Агрегация параметров для AI Advisor / ML Predictor -----------------
+    tec_statuses = [
+        params.city_state.get("tec_1", "coal_full"),
+        params.city_state.get("tec_2_west", "disabled"),
+    ]
+    tec_map = {
+        "coal_full": 100, "coal_reduced": 55, "filters_installed": 50,
+        "gas_converted": 15, "off": 0, "disabled": 0,
+    }
+    tec_power_pct = sum(tec_map.get(s, 100) for s in tec_statuses) / len(tec_statuses)
+
+    traffic_statuses = [
+        params.city_state.get("traffic_osh_bazaar", "moderate"),
+        params.city_state.get("traffic_east_terminal", "moderate"),
+        params.city_state.get("traffic_south_highway", "moderate"),
+        params.city_state.get("traffic_chui", "moderate"),
+        params.city_state.get("traffic_manas", "moderate"),
+    ]
+    traffic_map = {
+        "congested": 90, "moderate": 50, "normal": 50,
+        "free_flow": 20, "low": 20, "closed": 0,
+    }
+    traffic_level_pct = sum(traffic_map.get(s, 50) for s in traffic_statuses) / len(traffic_statuses)
+
+    heating_objects = [
+        "private_sector_north", "private_sector_south", "private_sector_east",
+        "private_sector_west", "novostroyka_ak_orgo", "novostroyka_kelechek", "asanbai",
+    ]
+    coal_active = any(params.city_state.get(obj) == "coal_heating" for obj in heating_objects)
+    heating_ban = not coal_active
+
+    # --- AQI уровень (для fallback текста) ---------------------------------
     if aqi <= 50:
         level = "Хорошее"
     elif aqi <= 100:
@@ -410,26 +448,54 @@ async def generate_mock_heatmap(
     else:
         level = "Опасное"
 
-    # Подсчёт активных загрязнителей / поглотителей
-    polluters = [s for s in sources if s["emission"] > 0.01]
-    absorbers = [s for s in sources if s["emission"] < -0.01]
-    weather_type = params.weather.weather_type
-    weather_note = f"Температура {temperature}°C. " if params.use_real_weather else ""
-    inversion_note = "⚠️ Температурная инверсия усиливает загрязнение! " if temperature < 0 else ""
-    precip_note = ""
-    if weather_type == "rain":
-        precip_note = "🌧 Дождь вымывает загрязнения. "
-    elif weather_type == "snow":
-        precip_note = "❄️ Снег частично очищает воздух. "
+    # --- Текстовый совет от AI (OpenRouter) --------------------------------
+    try:
+        from ai.ai_advisor import get_mayor_advice
+        ai_text = await get_mayor_advice(
+            avg_pollution=aqi,
+            tec_power=tec_power_pct,
+            traffic=traffic_level_pct,
+            heating_ban=heating_ban,
+            wind_speed=wind_speed,
+        )
+    except Exception as e:
+        logging.warning("AI Advisor unavailable, using fallback: %s", e)
+        # Fallback — статический отчёт
+        polluters = [s for s in sources if s["emission"] > 0.01]
+        absorbers = [s for s in sources if s["emission"] < -0.01]
+        weather_type = params.weather.weather_type
+        weather_note = f"Температура {temperature}°C. " if params.use_real_weather else ""
+        inversion_note = "⚠️ Температурная инверсия усиливает загрязнение! " if temperature < 0 else ""
+        precip_note = ""
+        if weather_type == "rain":
+            precip_note = "🌧 Дождь вымывает загрязнения. "
+        elif weather_type == "snow":
+            precip_note = "❄️ Снег частично очищает воздух. "
 
-    ai_text = (
-        f"AQI: {aqi} — качество воздуха: {level}. "
-        f"Активных источников: {len(polluters)}, зелёных зон: {len(absorbers)}. "
-        f"{weather_note}"
-        f"{inversion_note}"
-        f"{precip_note}"
-        f"Ветер {wind_speed} м/с, направление {wind_direction}° "
-        f"(шлейф → {plume_dir_deg:.0f}°)."
-    ).strip()
+        ai_text = (
+            f"AQI: {aqi} — качество воздуха: {level}. "
+            f"Активных источников: {len(polluters)}, зелёных зон: {len(absorbers)}. "
+            f"{weather_note}"
+            f"{inversion_note}"
+            f"{precip_note}"
+            f"Ветер {wind_speed} м/с, направление {wind_direction}° "
+            f"(шлейф → {plume_dir_deg:.0f}°)."
+        ).strip()
 
-    return points, aqi, ai_text
+    # --- Предикт от ML Модели (AQI через 12ч) ------------------------------
+    prediction: int | None = None
+    try:
+        from ai.smog_predictor import predict_future_aqi
+        raw = predict_future_aqi(
+            current_aqi=aqi,
+            tec_power=tec_power_pct / 100.0,
+            traffic=traffic_level_pct / 100.0,
+            heating_ban=heating_ban,
+            wind_speed=wind_speed,
+        )
+        if raw is not None:
+            prediction = int(round(raw))
+    except Exception as e:
+        logging.warning("ML Predictor unavailable: %s", e)
+
+    return points, aqi, ai_text, prediction

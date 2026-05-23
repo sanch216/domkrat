@@ -56,17 +56,36 @@ manager = ConnectionManager()
 async def simulate(params: SimulationParams) -> SimulationResponse:
     """Принимает параметры симуляции, сохраняет состояние и возвращает результат."""
     await save_state(params)
-    heatmap_data, aqi, ai_text = await generate_mock_heatmap(params)
+    heatmap_data, aqi, ai_text, prediction = await generate_mock_heatmap(params)
     return SimulationResponse(
         status="ok",
         aqi=aqi,
         heatmap_data=heatmap_data,
         ai_insight=ai_text,
+        predicted_aqi=prediction,
     )
 
-
 # ---------------------------------------------------------------------------
-# WebSocket endpoint (real-time + broadcast + throttling)
+# Chat endpoint (AI Advisor)
+# ---------------------------------------------------------------------------
+@app.post("/api/v1/chat")
+async def chat(body: dict) -> dict:
+    """Свободный чат с AI-советником по экологии Бишкека."""
+    user_message = body.get("message", "")
+    if not user_message.strip():
+        return {"reply": "Задайте вопрос о качестве воздуха в Бишкеке."}
+    try:
+        import sys, os
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if root_dir not in sys.path:
+            sys.path.append(root_dir)
+        from ai.ai_advisor import chat_with_advisor
+        reply = await chat_with_advisor(user_message)
+    except Exception as e:
+        reply = f"Ошибка AI: {e}"
+    return {"reply": reply}
+
+
 # ---------------------------------------------------------------------------
 @app.websocket("/api/v1/ws/simulate")
 async def ws_simulate(websocket: WebSocket) -> None:
@@ -91,13 +110,14 @@ async def ws_simulate(websocket: WebSocket) -> None:
             # --- Расчёт ---
             params = SimulationParams.model_validate_json(data)
             await save_state(params)
-            points, aqi, ai_text = await generate_mock_heatmap(params)
+            points, aqi, ai_text, prediction = await generate_mock_heatmap(params)
 
             response = SimulationResponse(
                 status="ok",
                 aqi=aqi,
                 heatmap_data=points,
                 ai_insight=ai_text,
+                predicted_aqi=prediction,
             )
 
             # --- Broadcast всем подключённым клиентам ---

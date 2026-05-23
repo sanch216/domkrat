@@ -38,3 +38,5 @@ class SimulationResponse(BaseModel):
     aqi: int = Field(default=0, ge=0, description="Air Quality Index")
     heatmap_data: list[HeatmapPoint] = Field(default_factory=list, description="Точки тепловой карты")
     ai_insight: str = Field(default="", description="Рекомендация от AI")
+    predicted_aqi: Optional[int] = Field(default=None, description="Предсказанный AQI через 12ч")
+

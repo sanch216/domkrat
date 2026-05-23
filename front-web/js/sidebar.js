@@ -77,7 +77,7 @@ function renderControls(container) {
   bind('slider-tr', 'val-tr', function(v) { controls.trafficLevel = +v; return v + '%'; });
 
   var ws = document.getElementById('sel-weather');
-  if (ws) ws.addEventListener('change', function() { controls.weather = ws.value; });
+  if (ws) ws.addEventListener('change', function() { controls.weather = ws.value; debouncedChange(); });
 
   var chk = document.getElementById('chk-real-weather');
   if (chk) chk.addEventListener('change', function() {
@@ -94,10 +94,16 @@ function renderControls(container) {
   if (btn) btn.addEventListener('click', function() { if (onChangeCb) onChangeCb(); });
 }
 
+var _debounceTimer = null;
+function debouncedChange() {
+  clearTimeout(_debounceTimer);
+  _debounceTimer = setTimeout(function() { if (onChangeCb) onChangeCb(); }, 300);
+}
+
 function bind(sid, vid, fn) {
   var s = document.getElementById(sid);
   var v = document.getElementById(vid);
-  if (s && v) s.addEventListener('input', function() { v.textContent = fn(s.value); });
+  if (s && v) s.addEventListener('input', function() { v.textContent = fn(s.value); debouncedChange(); });
 }
 
 export function showEditControls() {
