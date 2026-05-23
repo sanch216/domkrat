@@ -1,12 +1,28 @@
 from pydantic import BaseModel, Field
+from typing import Dict, Optional
+
+
+class WeatherConditions(BaseModel):
+    wind_direction: int = Field(default=0, description="Направление ветра (градусы)")
+    wind_speed: float = Field(default=2.0, description="Скорость ветра (м/с)")
+    temperature: float = Field(default=5.0, description="Температура (°C)")
 
 
 class SimulationParams(BaseModel):
-    tec_power: float = Field(default=50.0, ge=0, le=100, description="Мощность ТЭЦ (%)")
-    traffic_level: float = Field(default=50.0, ge=0, le=100, description="Уровень трафика (%)")
-    coal_heating: bool = Field(default=True, description="Угольное отопление вкл/выкл")
-    wind_direction: float = Field(default=0.0, ge=0, lt=360, description="Направление ветра (градусы)")
-    wind_speed: float = Field(default=2.0, ge=0, le=50, description="Скорость ветра (м/с)")
+    active_mode: Optional[str] = "edit"
+    modified_object: Optional[Dict[str, str]] = None
+    city_state: Dict[str, str] = Field(
+        default_factory=lambda: {
+            "tec_1": "coal_full",
+            "private_sector_north": "coal_heating",
+            "private_sector_south": "coal_heating",
+            "traffic_osh_bazaar": "congested",
+            "botanical_garden": "active",
+        },
+        description='Состояния объектов, напр. {"tec_1": "gas_converted"}',
+    )
+    weather: WeatherConditions = Field(default_factory=WeatherConditions)
+    use_real_weather: bool = False
 
 
 class HeatmapPoint(BaseModel):

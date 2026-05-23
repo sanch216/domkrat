@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from schemas import SimulationParams, SimulationResponse
@@ -30,3 +30,24 @@ async def simulate(params: SimulationParams) -> SimulationResponse:
         heatmap_data=heatmap_data,
         ai_insight=ai_text,
     )
+
+
+@app.websocket("/api/v1/ws/simulate")
+async def ws_simulate(websocket: WebSocket) -> None:
+    """WebSocket для интерактивной симуляции в реальном времени."""
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            params = SimulationParams.model_validate_json(data)
+            await save_state(params)
+            points, aqi, ai_text = await generate_mock_heatmap(params)
+            response = SimulationResponse(
+                status="ok",
+                aqi=aqi,
+                heatmap_data=points,
+                ai_insight=ai_text,
+            )
+            await websocket.send_json(response.model_dump())
+    except WebSocketDisconnect:
+        pass
