@@ -1,3 +1,5 @@
+import time
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -7,7 +9,7 @@ from smog_engine import generate_mock_heatmap
 
 app = FastAPI(
     title="Bishkek Smog Simulation",
-    version="0.1.0",
+    version="0.2.0",
 )
 
 app.add_middleware(
@@ -19,6 +21,37 @@ app.add_middleware(
 )
 
 
+# ---------------------------------------------------------------------------
+# WebSocket Connection Manager (Broadcast)
+# ---------------------------------------------------------------------------
+class ConnectionManager:
+    """Управляет активными WebSocket-соединениями и рассылает обновления всем."""
+
+    def __init__(self) -> None:
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket) -> None:
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket) -> None:
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict) -> None:
+        """Отправляет JSON всем подключённым клиентам."""
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                pass  # мёртвое соединение — уберётся при disconnect
+
+
+manager = ConnectionManager()
+
+
+# ---------------------------------------------------------------------------
+# HTTP endpoint (одиночный запрос)
+# ---------------------------------------------------------------------------
 @app.post("/api/v1/simulate", response_model=SimulationResponse)
 async def simulate(params: SimulationParams) -> SimulationResponse:
     """Принимает параметры симуляции, сохраняет состояние и возвращает результат."""
@@ -32,22 +65,43 @@ async def simulate(params: SimulationParams) -> SimulationResponse:
     )
 
 
+# ---------------------------------------------------------------------------
+# WebSocket endpoint (real-time + broadcast + throttling)
+# ---------------------------------------------------------------------------
 @app.websocket("/api/v1/ws/simulate")
 async def ws_simulate(websocket: WebSocket) -> None:
-    """WebSocket для интерактивной симуляции в реальном времени."""
-    await websocket.accept()
+    """WebSocket для интерактивной симуляции в реальном времени.
+
+    - Broadcast: результат рассылается ВСЕМ подключённым клиентам.
+    - Throttling: не чаще 1 расчёта в 100 мс от одного клиента (10 FPS).
+    """
+    await manager.connect(websocket)
+    last_calc_time = 0.0
+
     try:
         while True:
             data = await websocket.receive_text()
+
+            # --- Throttling: макс. 10 расчётов/сек от одного клиента ---
+            current_time = time.time()
+            if current_time - last_calc_time < 0.1:
+                continue
+            last_calc_time = current_time
+
+            # --- Расчёт ---
             params = SimulationParams.model_validate_json(data)
             await save_state(params)
             points, aqi, ai_text = await generate_mock_heatmap(params)
+
             response = SimulationResponse(
                 status="ok",
                 aqi=aqi,
                 heatmap_data=points,
                 ai_insight=ai_text,
             )
-            await websocket.send_json(response.model_dump())
+
+            # --- Broadcast всем подключённым клиентам ---
+            await manager.broadcast(response.model_dump())
+
     except WebSocketDisconnect:
-        pass
+        manager.disconnect(websocket)

@@ -1,4 +1,4 @@
-import { API_URL } from './config.js';
+import { API_URL, WS_URL } from './config.js';
 import { initMap, updateSmogSegments, updateSegmentIntensities, updateTrafficLevel, clearSmogSegments, getMap, resetView, initPreviewMap, STREET_LATS, STREET_LNGS } from './map.js';
 import { addMarkers, removeMarkers, getCityObjects, getCityState } from './markers.js';
 import { WindSystem } from './wind.js';
@@ -7,71 +7,57 @@ import { initSidebar, getControls, showEditControls, showLiveInfo, showAiInfo } 
 var currentMode = 'live';
 var windSystem = null;
 var appReady = false;
+var ws = null;
+var wsReconnectTimer = null;
 
-var EMISSION_FACTORS = {
-  coal_full: 0.9,
-  coal_reduced: 0.55,
-  gas_converted: 0.15,
-  off: 0,
-  full_load: 0.7,
-  reduced: 0.35,
-  idle: 0.08,
-  shutdown: 0,
-  coal_heating: 0.45,
-  gas_heating: 0.12,
-  electric_heating: 0.03,
-  no_heating: 0,
-  congested: 0.4,
-  moderate: 0.2,
-  free_flow: 0.08,
-  closed: 0,
-  active: -0.08,
-  inactive: 0
-};
+// ---------------------------------------------------------------------------
+// WebSocket — подключение к бэкенду
+// ---------------------------------------------------------------------------
+function connectWs() {
+  if (ws && ws.readyState <= 1) return;
 
-function computeLocalPollution(objects, ctrl) {
-  var results = [];
-  for (var r = 0; r < STREET_LATS.length - 1; r++) {
-    for (var c = 0; c < STREET_LNGS.length - 1; c++) {
-      var centerLat = (STREET_LATS[r] + STREET_LATS[r + 1]) / 2;
-      var centerLng = (STREET_LNGS[c] + STREET_LNGS[c + 1]) / 2;
-      var intensity = 0;
+  ws = new WebSocket(WS_URL);
 
-      for (var i = 0; i < objects.length; i++) {
-        var obj = objects[i];
-        var em = EMISSION_FACTORS[obj.state];
-        if (em === undefined || em === 0) continue;
+  ws.onopen = function() {
+    console.log('[WS] Connected');
+    runSimulation();
+  };
 
-        var dLat = (centerLat - obj.lat) * 111;
-        var dLng = (centerLng - obj.lng) * 85;
-        var dist = Math.sqrt(dLat * dLat + dLng * dLng);
-
-        var windRad = (ctrl.windDirection - 90) * Math.PI / 180;
-        var toSegAngle = Math.atan2(dLat, dLng);
-        var alignment = Math.cos(toSegAngle - windRad);
-        var windBoost = alignment > 0 ? 1 + alignment * ctrl.windSpeed * 0.025 : 1;
-
-        var distDecay = Math.exp(-dist / 3.5);
-        intensity += em * distDecay * windBoost;
+  ws.onmessage = function(event) {
+    try {
+      var data = JSON.parse(event.data);
+      if (data.heatmap_data) updateSmogSegments(data.heatmap_data);
+      if (data.aqi !== undefined) updateAqi(data.aqi);
+      if (data.ai_insight) {
+        var it = document.getElementById('insightText');
+        var io = document.getElementById('insightOverlay');
+        if (it) it.textContent = data.ai_insight;
+        if (io) io.classList.remove('hidden');
       }
-
-      var trafficAdd = (ctrl.trafficLevel / 100) * 0.1;
-      intensity += trafficAdd;
-
-      if (ctrl.weather === 'rain') intensity *= 0.4;
-      if (ctrl.weather === 'snow') intensity *= 0.6;
-
-      var windDilution = Math.max(0.25, 1 - ctrl.windSpeed * 0.015);
-      intensity *= windDilution;
-
-      if (ctrl.temperature < -5) intensity *= 1 + Math.abs(ctrl.temperature + 5) * 0.02;
-
-      results.push({ row: r, col: c, intensity: Math.min(1, Math.max(0, intensity)) });
+    } catch (e) {
+      console.warn('[WS] Parse error:', e);
     }
-  }
-  return results;
+  };
+
+  ws.onclose = function() {
+    console.log('[WS] Disconnected, reconnecting in 2s...');
+    wsReconnectTimer = setTimeout(connectWs, 2000);
+  };
+
+  ws.onerror = function() {
+    ws.close();
+  };
 }
 
+function sendWs(data) {
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify(data));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Навигация Landing ↔ App
+// ---------------------------------------------------------------------------
 window.navigateTo = function(view) {
   var landing = document.getElementById('landing');
   var appView = document.getElementById('app-view');
@@ -89,6 +75,9 @@ window.navigateTo = function(view) {
   }
 };
 
+// ---------------------------------------------------------------------------
+// Landing — анимации (без изменений)
+// ---------------------------------------------------------------------------
 function initNavbar() {
   var toggle = document.getElementById('navToggle');
   var links = document.getElementById('navLinks');
@@ -182,6 +171,9 @@ function initParallax() {
   }, { passive: true });
 }
 
+// ---------------------------------------------------------------------------
+// App — инициализация
+// ---------------------------------------------------------------------------
 function initApp() {
   appReady = true;
 
@@ -195,8 +187,8 @@ function initApp() {
       initSidebar(runSimulation);
       initModeButtons();
       initAiChat();
+      connectWs();
       switchMode('live');
-      runSimulation();
     }
   });
 }
@@ -245,67 +237,40 @@ function switchMode(mode) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Симуляция — собираем данные и отправляем по WebSocket
+// ---------------------------------------------------------------------------
 function runSimulation() {
   var c = getControls();
+
+  // Обновляем визуальные элементы клиента
   if (windSystem) windSystem.update(c.windSpeed, c.windDirection);
   updateTrafficLevel(c.trafficLevel);
 
-  var objects = getCityObjects();
-  var localData = computeLocalPollution(objects, c);
-  updateSegmentIntensities(localData);
+  // Собираем city_state из маркеров
+  var cityState = getCityState();
 
-  var avgIntensity = localData.reduce(function(s, d) { return s + d.intensity; }, 0) / localData.length;
-  var aqi = Math.round(avgIntensity * 500);
-  updateAqi(aqi);
-
-  var maxSeg = localData.reduce(function(a, b) { return a.intensity > b.intensity ? a : b; });
-  var insight = generateInsight(objects, c, aqi, maxSeg);
-  var it = document.getElementById('insightText');
-  var io = document.getElementById('insightOverlay');
-  if (it) it.textContent = insight;
-  if (io) io.classList.remove('hidden');
-
-  tryApiSimulation(c);
-}
-
-function tryApiSimulation(c) {
+  // Формируем запрос для бэкенда (SimulationParams)
   var params = {
-    tec_power: 80,
-    traffic_level: c.trafficLevel,
-    coal_heating: true,
-    wind_direction: c.windDirection,
-    wind_speed: c.windSpeed
+    active_mode: currentMode,
+    city_state: cityState,
+    weather: {
+      wind_direction: c.windDirection,
+      wind_speed: c.windSpeed,
+      temperature: c.temperature,
+      weather_type: c.weather
+    },
+    use_real_weather: c.useRealWeather,
+    traffic_level: c.trafficLevel
   };
 
-  fetch(API_URL + '/api/v1/simulate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params)
-  }).then(function(resp) {
-    if (!resp.ok) throw new Error(resp.status);
-    return resp.json();
-  }).then(function(data) {
-    if (data.heatmap_data) updateSmogSegments(data.heatmap_data);
-    if (data.aqi) updateAqi(data.aqi);
-  }).catch(function() {});
+  // Отправляем по WebSocket
+  sendWs(params);
 }
 
-function generateInsight(objects, ctrl, aqi, maxSeg) {
-  var tecObj = objects.find(function(o) { return o.id === 'tec_1'; });
-  var tecState = tecObj ? tecObj.state : 'coal_full';
-
-  if (aqi > 200)
-    return 'Критический уровень загрязнения. Основной фактор: ' +
-      (tecState === 'coal_full' ? 'ТЭЦ на угле. Рекомендуется перевод на газ.' : 'совокупность источников. Рекомендуется снижение трафика и мощности промзон.');
-
-  if (aqi > 100)
-    return 'Повышенное загрязнение (AQI ' + aqi + '). Наиболее загрязнён сегмент [' + maxSeg.row + ',' + maxSeg.col + ']. ' +
-      (ctrl.windSpeed < 3 ? 'Слабый ветер препятствует рассеиванию.' : 'Ветер частично рассеивает смог.');
-
-  return 'Качество воздуха в пределах нормы (AQI ' + aqi + '). ' +
-    (ctrl.weather === 'rain' ? 'Дождь способствует очищению атмосферы.' : 'Текущие условия стабильны.');
-}
-
+// ---------------------------------------------------------------------------
+// AQI — визуализация
+// ---------------------------------------------------------------------------
 function updateAqi(aqi) {
   var ov = document.getElementById('aqiOverlay');
   var num = document.getElementById('aqiNumber');
@@ -334,6 +299,9 @@ function updateAqi(aqi) {
   ov.style.boxShadow = 'inset rgba(199,211,234,0.08) 0 1px 1px 0, 0 0 24px ' + color + '20';
 }
 
+// ---------------------------------------------------------------------------
+// AI Chat
+// ---------------------------------------------------------------------------
 function initAiChat() {
   var inp = document.getElementById('aiInput');
   var btn = document.getElementById('aiSendBtn');
@@ -385,6 +353,9 @@ function aiReply(q) {
   return 'Качество воздуха зависит от ТЭЦ, трафика, отопления и метеоусловий. Задайте конкретный вопрос о любом факторе для детального анализа.';
 }
 
+// ---------------------------------------------------------------------------
+// DOMContentLoaded — Landing
+// ---------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', function() {
   initNavbar();
   initScrollReveal();

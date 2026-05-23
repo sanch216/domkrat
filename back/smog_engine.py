@@ -1,3 +1,4 @@
+import logging
 import math
 import random
 
@@ -26,8 +27,10 @@ OBJECT_REGISTRY: dict[str, dict] = {
         "lat": 42.876, "lng": 74.652,
         "statuses": {
             "coal_full": 1.0,
+            "coal_reduced": 0.55,
             "filters_installed": 0.5,
-            "gas_converted": 0.1,
+            "gas_converted": 0.15,
+            "off": 0.0,
             "disabled": 0.0,
         },
     },
@@ -35,64 +38,52 @@ OBJECT_REGISTRY: dict[str, dict] = {
         "lat": 42.870, "lng": 74.540,
         "statuses": {
             "coal_full": 0.7,
+            "coal_reduced": 0.4,
             "filters_installed": 0.35,
             "gas_converted": 0.08,
+            "off": 0.0,
             "disabled": 0.0,
         },
     },
     # --- Угольный частный сектор ---
     "private_sector_north": {
-        "lat": 42.890, "lng": 74.580,
+        "lat": 42.896, "lng": 74.595,
         "statuses": {
             "coal_heating": 0.7,
             "gas_heating": 0.1,
             "electric_heating": 0.02,
+            "no_heating": 0.0,
             "disabled": 0.0,
         },
     },
     "private_sector_south": {
-        "lat": 42.820, "lng": 74.580,
+        "lat": 42.838, "lng": 74.590,
         "statuses": {
             "coal_heating": 0.8,
             "gas_heating": 0.1,
             "electric_heating": 0.02,
+            "no_heating": 0.0,
             "disabled": 0.0,
         },
     },
     "private_sector_east": {
-        "lat": 42.850, "lng": 74.650,
+        "lat": 42.870, "lng": 74.640,
         "statuses": {
             "coal_heating": 0.6,
             "gas_heating": 0.1,
+            "electric_heating": 0.02,
+            "no_heating": 0.0,
             "disabled": 0.0,
         },
     },
-    # --- Трафик-хабы ---
-    "traffic_osh_bazaar": {
-        "lat": 42.875, "lng": 74.588,
+    "private_sector_west": {
+        "lat": 42.870, "lng": 74.550,
         "statuses": {
-            "congested": 0.9,
-            "normal": 0.4,
-            "low": 0.15,
-            "pedestrian_zone": 0.0,
-        },
-    },
-    "traffic_east_terminal": {
-        "lat": 42.868, "lng": 74.605,
-        "statuses": {
-            "congested": 0.8,
-            "normal": 0.35,
-            "low": 0.1,
-            "pedestrian_zone": 0.0,
-        },
-    },
-    "traffic_south_highway": {
-        "lat": 42.830, "lng": 74.610,
-        "statuses": {
-            "congested": 0.7,
-            "normal": 0.3,
-            "low": 0.1,
-            "closed": 0.0,
+            "coal_heating": 0.65,
+            "gas_heating": 0.1,
+            "electric_heating": 0.02,
+            "no_heating": 0.0,
+            "disabled": 0.0,
         },
     },
     # --- Новостройки ---
@@ -101,6 +92,8 @@ OBJECT_REGISTRY: dict[str, dict] = {
         "statuses": {
             "coal_heating": 0.65,
             "gas_heating": 0.1,
+            "electric_heating": 0.02,
+            "no_heating": 0.0,
             "disabled": 0.0,
         },
     },
@@ -109,14 +102,117 @@ OBJECT_REGISTRY: dict[str, dict] = {
         "statuses": {
             "coal_heating": 0.55,
             "gas_heating": 0.1,
+            "electric_heating": 0.02,
+            "no_heating": 0.0,
+            "disabled": 0.0,
+        },
+    },
+    "asanbai": {
+        "lat": 42.844, "lng": 74.630,
+        "statuses": {
+            "coal_heating": 0.5,
+            "gas_heating": 0.1,
+            "electric_heating": 0.02,
+            "no_heating": 0.0,
+            "disabled": 0.0,
+        },
+    },
+    # --- Трафик-хабы ---
+    "traffic_osh_bazaar": {
+        "lat": 42.862, "lng": 74.598,
+        "statuses": {
+            "congested": 0.9,
+            "moderate": 0.4,
+            "normal": 0.4,
+            "free_flow": 0.15,
+            "low": 0.15,
+            "pedestrian_zone": 0.0,
+            "closed": 0.0,
+        },
+    },
+    "traffic_east_terminal": {
+        "lat": 42.868, "lng": 74.605,
+        "statuses": {
+            "congested": 0.8,
+            "moderate": 0.35,
+            "normal": 0.35,
+            "free_flow": 0.1,
+            "low": 0.1,
+            "pedestrian_zone": 0.0,
+            "closed": 0.0,
+        },
+    },
+    "traffic_south_highway": {
+        "lat": 42.835, "lng": 74.585,
+        "statuses": {
+            "congested": 0.7,
+            "moderate": 0.3,
+            "normal": 0.3,
+            "free_flow": 0.1,
+            "low": 0.1,
+            "closed": 0.0,
+        },
+    },
+    "traffic_chui": {
+        "lat": 42.874, "lng": 74.593,
+        "statuses": {
+            "congested": 0.85,
+            "moderate": 0.35,
+            "normal": 0.35,
+            "free_flow": 0.12,
+            "low": 0.12,
+            "closed": 0.0,
+        },
+    },
+    "traffic_manas": {
+        "lat": 42.868, "lng": 74.583,
+        "statuses": {
+            "congested": 0.7,
+            "moderate": 0.3,
+            "normal": 0.3,
+            "free_flow": 0.1,
+            "low": 0.1,
+            "closed": 0.0,
+        },
+    },
+    # --- Промышленные зоны ---
+    "factory_north": {
+        "lat": 42.900, "lng": 74.570,
+        "statuses": {
+            "full_load": 0.7,
+            "reduced": 0.35,
+            "idle": 0.08,
+            "shutdown": 0.0,
+            "disabled": 0.0,
+        },
+    },
+    "factory_east": {
+        "lat": 42.865, "lng": 74.650,
+        "statuses": {
+            "full_load": 0.6,
+            "reduced": 0.3,
+            "idle": 0.06,
+            "shutdown": 0.0,
+            "disabled": 0.0,
+        },
+    },
+    "airport": {
+        "lat": 42.853, "lng": 74.537,
+        "statuses": {
+            "full_load": 0.5,
+            "reduced": 0.25,
+            "idle": 0.05,
+            "shutdown": 0.0,
             "disabled": 0.0,
         },
     },
     # --- Зелёные зоны (поглощение) ---
     "botanical_garden": {
-        "lat": 42.840, "lng": 74.600,
+        "lat": 42.857, "lng": 74.574,
         "statuses": {
             "active": -0.3,
+            "reduced": -0.15,
+            "inactive": 0.0,
             "destroyed": 0.1,
         },
     },
@@ -124,35 +220,56 @@ OBJECT_REGISTRY: dict[str, dict] = {
         "lat": 42.874, "lng": 74.604,
         "statuses": {
             "active": -0.15,
+            "reduced": -0.08,
+            "inactive": 0.0,
             "destroyed": 0.05,
         },
     },
     "panfilov_park": {
-        "lat": 42.877, "lng": 74.598,
-        "statuses": {"active": -0.2, "destroyed": 0.0}
+        "lat": 42.875, "lng": 74.612,
+        "statuses": {
+            "active": -0.2,
+            "reduced": -0.1,
+            "inactive": 0.0,
+            "destroyed": 0.0,
+        },
     },
     "ataturk_park": {
-        "lat": 42.842, "lng": 74.588,
-        "statuses": {"active": -0.2, "destroyed": 0.0}
+        "lat": 42.882, "lng": 74.589,
+        "statuses": {
+            "active": -0.2,
+            "reduced": -0.1,
+            "inactive": 0.0,
+            "destroyed": 0.0,
+        },
     },
     "karagachevaya_grove": {
         "lat": 42.898, "lng": 74.615,
-        "statuses": {"active": -0.5, "destroyed": 0.1} # Самый мощный "очиститель" на севере
+        "statuses": {
+            "active": -0.5,
+            "reduced": -0.25,
+            "inactive": 0.0,
+            "destroyed": 0.1,
+        },
     },
     "korea_friendship_park": {
-        "lat": 42.844, "lng": 74.586,  # Примерные координаты на Ахунбаева
+        "lat": 42.844, "lng": 74.586,
         "statuses": {
-            "active": -0.1, 
-            "destroyed": 0.05
-        }
+            "active": -0.1,
+            "reduced": -0.05,
+            "inactive": 0.0,
+            "destroyed": 0.05,
+        },
     },
     "togolok_moldo_square": {
-        "lat": 42.872, "lng": 74.594,  # Центр
+        "lat": 42.872, "lng": 74.594,
         "statuses": {
-            "active": -0.05,  # Очень слабое поглощение, так как он маленький
-            "destroyed": 0.02
-        }
-    }
+            "active": -0.05,
+            "reduced": -0.02,
+            "inactive": 0.0,
+            "destroyed": 0.02,
+        },
+    },
 }
 
 
@@ -188,8 +305,12 @@ async def generate_mock_heatmap(
     for obj_key, status in params.city_state.items():
         registry_entry = OBJECT_REGISTRY.get(obj_key)
         if registry_entry is None:
+            logging.warning("Unknown object key in city_state: %s. Skipping.", obj_key)
             continue
-        base_emission = registry_entry["statuses"].get(status, 0.0)
+        base_emission = registry_entry["statuses"].get(status, None)
+        if base_emission is None:
+            logging.warning("Unknown status '%s' for object '%s'. Using 0.0 emission.", status, obj_key)
+            base_emission = 0.0
         sources.append({
             "lat": registry_entry["lat"],
             "lng": registry_entry["lng"],
@@ -246,8 +367,20 @@ async def generate_mock_heatmap(
                 else:
                     total_intensity += contribution
 
-            # Инверсия + шум
+            # Инверсия + осадки + трафик + шум
             total_intensity *= inversion_mult
+
+            # Осадки: дождь вымывает, снег частично
+            weather_type = params.weather.weather_type
+            if weather_type == "rain":
+                total_intensity *= 0.4
+            elif weather_type == "snow":
+                total_intensity *= 0.6
+
+            # Глобальный фон трафика
+            traffic_add = (params.traffic_level / 100.0) * 0.1
+            total_intensity += traffic_add
+
             total_intensity += random.uniform(-0.03, 0.03)
             total_intensity = min(max(total_intensity, 0.0), 1.0)
 
@@ -280,14 +413,21 @@ async def generate_mock_heatmap(
     # Подсчёт активных загрязнителей / поглотителей
     polluters = [s for s in sources if s["emission"] > 0.01]
     absorbers = [s for s in sources if s["emission"] < -0.01]
+    weather_type = params.weather.weather_type
     weather_note = f"Температура {temperature}°C. " if params.use_real_weather else ""
     inversion_note = "⚠️ Температурная инверсия усиливает загрязнение! " if temperature < 0 else ""
+    precip_note = ""
+    if weather_type == "rain":
+        precip_note = "🌧 Дождь вымывает загрязнения. "
+    elif weather_type == "snow":
+        precip_note = "❄️ Снег частично очищает воздух. "
 
     ai_text = (
         f"AQI: {aqi} — качество воздуха: {level}. "
         f"Активных источников: {len(polluters)}, зелёных зон: {len(absorbers)}. "
         f"{weather_note}"
         f"{inversion_note}"
+        f"{precip_note}"
         f"Ветер {wind_speed} м/с, направление {wind_direction}° "
         f"(шлейф → {plume_dir_deg:.0f}°)."
     ).strip()
