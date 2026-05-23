@@ -26,6 +26,126 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   min-height: 100vh;
   background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void-deep) 100%);
   position: relative;
+  overflow: hidden;
+}
+
+.dot-grid {
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(178, 178, 178, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sparkle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(242, 185, 139, 0.7);
+  box-shadow: 0 0 6px rgba(242, 185, 139, 0.4), 0 0 12px rgba(242, 185, 139, 0.15);
+  animation: sparkleAnim 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sparkle.blue {
+  background: rgba(141, 214, 255, 0.6);
+  box-shadow: 0 0 6px rgba(141, 214, 255, 0.3), 0 0 12px rgba(141, 214, 255, 0.1);
+}
+
+.sparkle.violet {
+  background: rgba(102, 58, 243, 0.7);
+  box-shadow: 0 0 6px rgba(102, 58, 243, 0.4), 0 0 14px rgba(102, 58, 243, 0.15);
+}
+
+@keyframes sparkleAnim {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.5); }
+}
+
+.gradient-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 5%, rgba(242, 185, 139, 0.15) 30%, rgba(254, 201, 155, 0.12) 50%, rgba(141, 214, 255, 0.08) 70%, transparent 95%);
+  position: relative;
+  z-index: 2;
+}
+
+.light-streak {
+  position: absolute;
+  width: 1px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.light-streak::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent, rgba(242, 185, 139, 0.06), transparent);
+}
+
+.network-line {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.network-line.h {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(141, 214, 255, 0.03), transparent);
+}
+
+.network-line.v {
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(102, 58, 243, 0.03), transparent);
+}
+
+.float-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(60px);
+  animation: floatOrb 20s ease-in-out infinite;
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-15px, 15px) scale(0.95); }
+  75% { transform: translate(20px, 10px) scale(1.02); }
+}
+
+.crosshair {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.12;
+}
+
+.crosshair::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--polar-blue);
+}
+
+.crosshair::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--polar-blue);
 }
 
 #mouseGlow {
@@ -33,7 +153,7 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   width: 800px;
   height: 800px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(102, 58, 243, 0.07) 0%, rgba(141, 214, 255, 0.02) 40%, transparent 65%);
+  background: radial-gradient(circle, rgba(102, 58, 243, 0.06) 0%, rgba(141, 214, 255, 0.015) 35%, transparent 60%);
   pointer-events: none;
   transform: translate(-50%, -50%);
   z-index: 1;
@@ -53,6 +173,7 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   padding: 140px 32px 100px;
   position: relative;
   overflow: hidden;
+  z-index: 2;
 }
 
 .hero-glow {
@@ -114,6 +235,8 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   color: var(--text-ghost);
   margin-bottom: 28px;
   animation: fadeInUp 1.2s var(--ease-out-expo) 0.2s both;
+  position: relative;
+  z-index: 2;
 }
 
 .hero h1 em {
@@ -147,9 +270,9 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   justify-content: center;
   gap: 64px;
   padding: 64px 32px;
-  border-top: 1px solid var(--glass-border);
-  border-bottom: 1px solid var(--glass-border);
   flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
 }
 
 .stat-item { text-align: center; }
@@ -170,7 +293,11 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   font-weight: 300;
 }
 
-.section { padding: 120px 0; }
+.section {
+  padding: 120px 0;
+  position: relative;
+  z-index: 2;
+}
 
 .section-label {
   font-size: 11px;
@@ -234,6 +361,21 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   background: linear-gradient(90deg, transparent, rgba(199, 211, 234, 0.15), transparent);
   transition: opacity 0.4s ease;
 }
+
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at var(--card-mouse-x, 50%) var(--card-mouse-y, 50%), rgba(102, 58, 243, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.feature-card:hover::after { opacity: 1; }
 
 .feature-card:hover {
   box-shadow: var(--shadow-card-hover), 0 0 40px rgba(102, 58, 243, 0.08);
@@ -312,7 +454,7 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   line-height: 1;
   margin-bottom: 24px;
   display: block;
-  transition: opacity 0.4s ease, transform 0.4s var(--ease-out-expo);
+  transition: opacity 0.4s ease, transform 0.4s var(--ease-out-expo), color 0.4s ease;
 }
 
 .step-card:hover {
@@ -320,7 +462,7 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   transform: translateY(-6px);
   border-color: rgba(141, 214, 255, 0.08);
 }
-.step-card:hover::before { opacity: 0.4; transform: translateX(4px); }
+.step-card:hover::before { opacity: 0.5; transform: translateX(4px); color: rgba(242, 185, 139, 0.3); }
 
 .step-card h3 {
   font-family: var(--font-display);
@@ -332,7 +474,11 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
 
 .step-card p { font-size: 14px; color: var(--text-ash); line-height: 1.75; font-weight: 300; }
 
-.map-preview-section { padding: 120px 0; }
+.map-preview-section {
+  padding: 120px 0;
+  position: relative;
+  z-index: 2;
+}
 
 .map-preview-frame {
   position: relative;
@@ -359,6 +505,7 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   padding: 160px 0;
   text-align: center;
   position: relative;
+  z-index: 2;
 }
 
 .cta-section .cta-glow {
@@ -389,6 +536,8 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   font-size: 12px;
   color: var(--text-ember);
   letter-spacing: 0.3px;
+  position: relative;
+  z-index: 2;
 }
 
 .reveal {
@@ -449,6 +598,91 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   50% { border-color: rgba(102, 58, 243, 0.3); }
 }
 
+.deco-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.deco-diamond {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid;
+  transform: rotate(45deg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.deco-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.deco-bracket {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.08;
+}
+
+.deco-bracket::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid var(--polar-blue);
+  border-left: 1px solid var(--polar-blue);
+}
+
+.deco-bracket::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-bottom: 1px solid var(--polar-blue);
+  border-right: 1px solid var(--polar-blue);
+}
+
+@keyframes levitate {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-18px) rotate(2deg); }
+  50% { transform: translateY(-8px) rotate(-1deg); }
+  75% { transform: translateY(-22px) rotate(1.5deg); }
+}
+
+@keyframes levitateAlt {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-28px) rotate(-4deg); }
+}
+
+@keyframes rotateSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbitPulse {
+  0%, 100% { opacity: 0.06; transform: scale(1); }
+  50% { opacity: 0.12; transform: scale(1.08); }
+}
+
+@keyframes driftH {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(30px); }
+}
+
 @media (max-width: 768px) {
   .hero { padding: 110px 20px 60px; }
   .stats-bar { gap: 28px; padding: 40px 20px; }
@@ -458,4 +692,5 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   .map-preview-frame { height: 280px; }
   .feature-card, .step-card { min-height: auto; padding: 32px; }
   .cta-section { padding: 100px 0; }
+  .sparkle, .light-streak, .network-line, .crosshair, .float-orb, .deco-ring, .deco-diamond, .deco-dot, .deco-bracket { display: none; }
 }

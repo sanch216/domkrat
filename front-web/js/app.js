@@ -9,9 +9,100 @@ var windSystem = null;
 var appReady = false;
 var ws = null;
 var wsReconnectTimer = null;
+var liveInterval = null;
 
 // ---------------------------------------------------------------------------
-// WebSocket — подключение к бэкенду
+// Emission factors for local fallback computation
+// ---------------------------------------------------------------------------
+var EMISSION_FACTORS = {
+  coal_full: 0.9, coal_reduced: 0.55, gas_converted: 0.15, off: 0,
+  full_load: 0.7, reduced: 0.35, idle: 0.08, shutdown: 0,
+  coal_heating: 0.45, gas_heating: 0.12, electric_heating: 0.03, no_heating: 0,
+  congested: 0.4, moderate: 0.2, free_flow: 0.08, closed: 0,
+  active: -0.08, inactive: 0
+};
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+window.showNotification = function(text, type) {
+  var container = document.getElementById('notifContainer');
+  if (!container) return;
+
+  var notif = document.createElement('div');
+  notif.className = 'notification';
+
+  var dot = document.createElement('span');
+  dot.className = 'notif-dot';
+  if (type === 'success') dot.style.background = '#0ae448';
+  else if (type === 'warning') dot.style.background = '#ff8709';
+  else if (type === 'error') dot.style.background = '#e53935';
+  else if (type === 'info') dot.style.background = '#8dd6ff';
+  else dot.style.background = '#663af3';
+  dot.style.boxShadow = '0 0 6px ' + dot.style.background;
+
+  var span = document.createElement('span');
+  span.className = 'notif-text';
+  span.textContent = text;
+
+  notif.appendChild(dot);
+  notif.appendChild(span);
+  container.appendChild(notif);
+
+  setTimeout(function() {
+    notif.classList.add('leaving');
+    setTimeout(function() { notif.remove(); }, 300);
+  }, 4000);
+};
+
+// ---------------------------------------------------------------------------
+// Local pollution fallback (used when WS not connected yet)
+// ---------------------------------------------------------------------------
+function computeLocalPollution(objects, ctrl) {
+  var results = [];
+  for (var r = 0; r < STREET_LATS.length - 1; r++) {
+    for (var c = 0; c < STREET_LNGS.length - 1; c++) {
+      var centerLat = (STREET_LATS[r] + STREET_LATS[r + 1]) / 2;
+      var centerLng = (STREET_LNGS[c] + STREET_LNGS[c + 1]) / 2;
+      var intensity = 0;
+
+      for (var i = 0; i < objects.length; i++) {
+        var obj = objects[i];
+        var em = EMISSION_FACTORS[obj.state];
+        if (em === undefined || em === 0) continue;
+
+        var dLat = (centerLat - obj.lat) * 111;
+        var dLng = (centerLng - obj.lng) * 85;
+        var dist = Math.sqrt(dLat * dLat + dLng * dLng);
+
+        var windRad = (ctrl.windDirection - 90) * Math.PI / 180;
+        var toSegAngle = Math.atan2(dLat, dLng);
+        var alignment = Math.cos(toSegAngle - windRad);
+        var windBoost = alignment > 0 ? 1 + alignment * ctrl.windSpeed * 0.025 : 1;
+
+        var distDecay = Math.exp(-dist / 3.5);
+        intensity += em * distDecay * windBoost;
+      }
+
+      var trafficAdd = (ctrl.trafficLevel / 100) * 0.1;
+      intensity += trafficAdd;
+
+      if (ctrl.weather === 'rain') intensity *= 0.4;
+      if (ctrl.weather === 'snow') intensity *= 0.6;
+
+      var windDilution = Math.max(0.25, 1 - ctrl.windSpeed * 0.015);
+      intensity *= windDilution;
+
+      if (ctrl.temperature < -5) intensity *= 1 + Math.abs(ctrl.temperature + 5) * 0.02;
+
+      results.push({ row: r, col: c, intensity: Math.min(1, Math.max(0, intensity)) });
+    }
+  }
+  return results;
+}
+
+// ---------------------------------------------------------------------------
+// WebSocket \u2014 connection to backend
 // ---------------------------------------------------------------------------
 function connectWs() {
   if (ws && ws.readyState <= 1) return;
@@ -60,27 +151,33 @@ function sendWs(data) {
 }
 
 // ---------------------------------------------------------------------------
-// Навигация Landing <-> App
+// Navigation Landing <-> App <-> About
 // ---------------------------------------------------------------------------
 window.navigateTo = function(view) {
   var landing = document.getElementById('landing');
   var appView = document.getElementById('app-view');
+  var aboutView = document.getElementById('about-view');
   var navbar = document.getElementById('navbar');
 
+  landing.classList.add('hidden');
+  appView.classList.add('hidden');
+  if (aboutView) aboutView.classList.add('hidden');
+
   if (view === 'app') {
-    landing.classList.add('hidden');
     appView.classList.remove('hidden');
     navbar.classList.add('hidden');
     if (!appReady) initApp();
+  } else if (view === 'about') {
+    if (aboutView) aboutView.classList.remove('hidden');
+    navbar.classList.remove('hidden');
   } else {
-    appView.classList.add('hidden');
     landing.classList.remove('hidden');
     navbar.classList.remove('hidden');
   }
 };
 
 // ---------------------------------------------------------------------------
-// Landing — анимации
+// Landing \u2014 animations
 // ---------------------------------------------------------------------------
 function initNavbar() {
   var toggle = document.getElementById('navToggle');
@@ -175,8 +272,20 @@ function initParallax() {
   }, { passive: true });
 }
 
+function initCardGlow() {
+  document.querySelectorAll('.feature-card').forEach(function(card) {
+    card.addEventListener('mousemove', function(e) {
+      var rect = card.getBoundingClientRect();
+      var x = ((e.clientX - rect.left) / rect.width) * 100;
+      var y = ((e.clientY - rect.top) / rect.height) * 100;
+      card.style.setProperty('--card-mouse-x', x + '%');
+      card.style.setProperty('--card-mouse-y', y + '%');
+    });
+  });
+}
+
 // ---------------------------------------------------------------------------
-// App — инициализация
+// App \u2014 init
 // ---------------------------------------------------------------------------
 function initApp() {
   appReady = true;
@@ -207,8 +316,6 @@ function initModeButtons() {
   });
 }
 
-var liveInterval = null;
-
 function switchMode(mode) {
   currentMode = mode;
   var mapEl = getMap();
@@ -217,7 +324,7 @@ function switchMode(mode) {
   var aqiOv = document.getElementById('aqiOverlay');
   var insOv = document.getElementById('insightOverlay');
 
-  // Останавливаем авто-обновление при смене режима
+  // Stop live auto-refresh on mode switch
   if (liveInterval) { clearInterval(liveInterval); liveInterval = null; }
 
   if (mode === 'ai') {
@@ -225,6 +332,7 @@ function switchMode(mode) {
     aiPanel.classList.remove('hidden');
     showAiInfo();
     if (windSystem) windSystem.running = false;
+    window.showNotification('AI \u0421\u043e\u0432\u0435\u0442\u043d\u0438\u043a \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d', 'info');
   } else {
     mapArea.classList.remove('hidden');
     aiPanel.classList.add('hidden');
@@ -238,30 +346,46 @@ function switchMode(mode) {
     aqiOv.classList.remove('hidden');
     insOv.classList.remove('hidden');
     runSimulation();
-    // Авто-обновление каждые 15 секунд
+    // Auto-refresh every 15 seconds
     liveInterval = setInterval(runSimulation, 15000);
   } else if (mode === 'edit') {
     showEditControls();
     if (mapEl) addMarkers(mapEl, runSimulation);
     aqiOv.classList.remove('hidden');
     insOv.classList.remove('hidden');
+    window.showNotification('\u0420\u0435\u0436\u0438\u043c \u0441\u0438\u043c\u0443\u043b\u044f\u0446\u0438\u0438', 'info');
   }
 }
 
 // ---------------------------------------------------------------------------
-// Симуляция — собираем данные и отправляем по WebSocket
+// Simulation \u2014 collect data and send via WebSocket
 // ---------------------------------------------------------------------------
 function runSimulation() {
   var c = getControls();
 
-  // Обновляем визуальные элементы клиента
+  // Update visual elements
   if (windSystem) windSystem.update(c.windSpeed, c.windDirection);
   updateTrafficLevel(c.trafficLevel);
 
-  // Собираем city_state из маркеров
-  var cityState = getCityState();
+  // Local fallback computation (instant visual feedback)
+  var objects = getCityObjects();
+  var localData = computeLocalPollution(objects, c);
+  updateSegmentIntensities(localData);
 
-  // Формируем запрос для бэкенда (SimulationParams)
+  var avgIntensity = localData.reduce(function(s, d) { return s + d.intensity; }, 0) / localData.length;
+  var localAqi = Math.round(avgIntensity * 500);
+  updateAqi(localAqi);
+
+  // Local insight fallback
+  var maxSeg = localData.reduce(function(a, b) { return a.intensity > b.intensity ? a : b; });
+  var insight = generateInsight(objects, c, localAqi, maxSeg);
+  var it = document.getElementById('insightText');
+  var io = document.getElementById('insightOverlay');
+  if (it) it.textContent = insight;
+  if (io) io.classList.remove('hidden');
+
+  // Send to backend via WebSocket (will override with real AI + ML data)
+  var cityState = getCityState();
   var params = {
     active_mode: currentMode,
     city_state: cityState,
@@ -271,16 +395,30 @@ function runSimulation() {
       temperature: c.temperature,
       weather_type: c.weather
     },
-    use_real_weather: c.useRealWeather,
+    use_real_weather: c.useRealWeather || false,
     traffic_level: c.trafficLevel
   };
-
-  // Отправляем по WebSocket
   sendWs(params);
 }
 
+function generateInsight(objects, ctrl, aqi, maxSeg) {
+  var tecObj = objects.find(function(o) { return o.id === 'tec_1'; });
+  var tecState = tecObj ? tecObj.state : 'coal_full';
+
+  if (aqi > 200)
+    return '\u041a\u0440\u0438\u0442\u0438\u0447\u0435\u0441\u043a\u0438\u0439 \u0443\u0440\u043e\u0432\u0435\u043d\u044c \u0437\u0430\u0433\u0440\u044f\u0437\u043d\u0435\u043d\u0438\u044f. \u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0439 \u0444\u0430\u043a\u0442\u043e\u0440: ' +
+      (tecState === 'coal_full' ? '\u0422\u042d\u0426 \u043d\u0430 \u0443\u0433\u043b\u0435. \u0420\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0443\u0435\u0442\u0441\u044f \u043f\u0435\u0440\u0435\u0432\u043e\u0434 \u043d\u0430 \u0433\u0430\u0437.' : '\u0441\u043e\u0432\u043e\u043a\u0443\u043f\u043d\u043e\u0441\u0442\u044c \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u043e\u0432. \u0420\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0443\u0435\u0442\u0441\u044f \u0441\u043d\u0438\u0436\u0435\u043d\u0438\u0435 \u0442\u0440\u0430\u0444\u0438\u043a\u0430 \u0438 \u043c\u043e\u0449\u043d\u043e\u0441\u0442\u0438 \u043f\u0440\u043e\u043c\u0437\u043e\u043d.');
+
+  if (aqi > 100)
+    return '\u041f\u043e\u0432\u044b\u0448\u0435\u043d\u043d\u043e\u0435 \u0437\u0430\u0433\u0440\u044f\u0437\u043d\u0435\u043d\u0438\u0435 (AQI ' + aqi + '). \u041d\u0430\u0438\u0431\u043e\u043b\u0435\u0435 \u0437\u0430\u0433\u0440\u044f\u0437\u043d\u0451\u043d \u0441\u0435\u0433\u043c\u0435\u043d\u0442 [' + maxSeg.row + ',' + maxSeg.col + ']. ' +
+      (ctrl.windSpeed < 3 ? '\u0421\u043b\u0430\u0431\u044b\u0439 \u0432\u0435\u0442\u0435\u0440 \u043f\u0440\u0435\u043f\u044f\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u0440\u0430\u0441\u0441\u0435\u0438\u0432\u0430\u043d\u0438\u044e.' : '\u0412\u0435\u0442\u0435\u0440 \u0447\u0430\u0441\u0442\u0438\u0447\u043d\u043e \u0440\u0430\u0441\u0441\u0435\u0438\u0432\u0430\u0435\u0442 \u0441\u043c\u043e\u0433.');
+
+  return '\u041a\u0430\u0447\u0435\u0441\u0442\u0432\u043e \u0432\u043e\u0437\u0434\u0443\u0445\u0430 \u0432 \u043f\u0440\u0435\u0434\u0435\u043b\u0430\u0445 \u043d\u043e\u0440\u043c\u044b (AQI ' + aqi + '). ' +
+    (ctrl.weather === 'rain' ? '\u0414\u043e\u0436\u0434\u044c \u0441\u043f\u043e\u0441\u043e\u0431\u0441\u0442\u0432\u0443\u0435\u0442 \u043e\u0447\u0438\u0449\u0435\u043d\u0438\u044e \u0430\u0442\u043c\u043e\u0441\u0444\u0435\u0440\u044b.' : '\u0422\u0435\u043a\u0443\u0449\u0438\u0435 \u0443\u0441\u043b\u043e\u0432\u0438\u044f \u0441\u0442\u0430\u0431\u0438\u043b\u044c\u043d\u044b.');
+}
+
 // ---------------------------------------------------------------------------
-// AQI — визуализация
+// AQI visualization
 // ---------------------------------------------------------------------------
 function updateAqi(aqi) {
   var ov = document.getElementById('aqiOverlay');
@@ -311,7 +449,7 @@ function updateAqi(aqi) {
 }
 
 // ---------------------------------------------------------------------------
-// AI Chat — реальный вызов бэкенда через /api/v1/chat
+// AI Chat \u2014 real backend call via /api/v1/chat
 // ---------------------------------------------------------------------------
 function initAiChat() {
   var inp = document.getElementById('aiInput');
@@ -362,7 +500,7 @@ function appendMsg(c, text, isUser) {
 }
 
 // ---------------------------------------------------------------------------
-// DOMContentLoaded — Landing
+// DOMContentLoaded \u2014 Landing
 // ---------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', function() {
   initNavbar();
@@ -370,5 +508,6 @@ document.addEventListener('DOMContentLoaded', function() {
   initMouseGlow();
   initCounterAnimation();
   initParallax();
+  initCardGlow();
   try { initPreviewMap('preview-map'); } catch (e) {}
 });
