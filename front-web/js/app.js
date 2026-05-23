@@ -1,6 +1,6 @@
 import { API_URL, WS_URL } from './config.js';
 import { initMap, updateSmogSegments, updateSegmentIntensities, updateTrafficLevel, clearSmogSegments, getMap, resetView, initPreviewMap, STREET_LATS, STREET_LNGS } from './map.js';
-import { addMarkers, removeMarkers, getCityObjects, getCityState } from './markers.js';
+import { addMarkers, removeMarkers, getCityObjects, getCityState, resetCityState } from './markers.js';
 import { WindSystem } from './wind.js';
 import { initSidebar, getControls, showEditControls, showLiveInfo, showAiInfo } from './sidebar.js';
 
@@ -342,6 +342,8 @@ function switchMode(mode) {
   if (mode === 'live') {
     showLiveInfo();
     removeMarkers();
+    resetCityState();
+    clearSmogSegments();
     resetView();
     aqiOv.classList.remove('hidden');
     insOv.classList.remove('hidden');
