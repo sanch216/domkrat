@@ -1,12 +1,12 @@
-import { simulateApi } from './api.js';
-import { initMap, updateHeatmap, updateTrafficLevel, clearHeatmap, getMap, initPreviewMap } from './map.js';
-import { addMarkers, removeMarkers, getCityState, getCityObjects } from './markers.js';
+import { API_URL } from './config.js';
+import { initMap, updateSmogSegments, updateTrafficLevel, clearSmogSegments, getMap, resetView, initPreviewMap } from './map.js';
+import { addMarkers, removeMarkers, getCityState } from './markers.js';
 import { WindSystem } from './wind.js';
 import { initSidebar, getControls, showEditControls, showLiveInfo, showAiInfo } from './sidebar.js';
 
 let currentMode = 'live';
 let windSystem = null;
-let appMapInitialized = false;
+let appReady = false;
 
 window.navigateTo = function(view) {
   const landing = document.getElementById('landing');
@@ -17,7 +17,7 @@ window.navigateTo = function(view) {
     landing.classList.add('hidden');
     appView.classList.remove('hidden');
     navbar.classList.add('hidden');
-    if (!appMapInitialized) initAppMap();
+    if (!appReady) initApp();
   } else {
     appView.classList.add('hidden');
     landing.classList.remove('hidden');
@@ -42,10 +42,10 @@ function initNavbar() {
     });
   });
 
-  let resizeTimer;
+  let rt;
   window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
       if (window.innerWidth > 768) {
         toggle.classList.remove('active');
         links.classList.remove('open');
@@ -54,21 +54,19 @@ function initNavbar() {
   });
 }
 
-function initAppMap() {
-  appMapInitialized = true;
+function initApp() {
+  appReady = true;
 
   initMap('map', {
     zoom: 12.5,
     pitch: 50,
     bearing: -15,
-    onLoad: (map) => {
+    onLoad: () => {
       windSystem = new WindSystem(document.getElementById('windCanvas'));
       windSystem.init();
-
       initSidebar(runSimulation);
       initModeButtons();
       initAiChat();
-
       switchMode('live');
       runSimulation();
     }
@@ -87,11 +85,11 @@ function initModeButtons() {
 
 function switchMode(mode) {
   currentMode = mode;
-  const map = getMap();
+  const mapEl = getMap();
   const mapArea = document.getElementById('mapArea');
   const aiPanel = document.getElementById('aiPanel');
-  const aqiOverlay = document.getElementById('aqiOverlay');
-  const insightOverlay = document.getElementById('insightOverlay');
+  const aqiOv = document.getElementById('aqiOverlay');
+  const insOv = document.getElementById('insightOverlay');
 
   if (mode === 'ai') {
     mapArea.classList.add('hidden');
@@ -107,143 +105,138 @@ function switchMode(mode) {
   if (mode === 'live') {
     showLiveInfo();
     removeMarkers();
-    aqiOverlay.classList.remove('hidden');
-    insightOverlay.classList.remove('hidden');
+    resetView();
+    aqiOv.classList.remove('hidden');
+    insOv.classList.remove('hidden');
     runSimulation();
   } else if (mode === 'edit') {
     showEditControls();
-    if (map) addMarkers(map, runSimulation);
-    aqiOverlay.classList.remove('hidden');
-    insightOverlay.classList.remove('hidden');
+    if (mapEl) addMarkers(mapEl, runSimulation);
+    aqiOv.classList.remove('hidden');
+    insOv.classList.remove('hidden');
   }
 }
 
 async function runSimulation() {
-  const controls = getControls();
-
-  if (windSystem) {
-    windSystem.update(controls.windSpeed, controls.windDirection);
-  }
-
-  updateTrafficLevel(controls.trafficLevel);
+  const c = getControls();
+  if (windSystem) windSystem.update(c.windSpeed, c.windDirection);
+  updateTrafficLevel(c.trafficLevel);
 
   const params = {
     tec_power: 80,
-    traffic_level: controls.trafficLevel,
+    traffic_level: c.trafficLevel,
     coal_heating: true,
-    wind_direction: controls.windDirection,
-    wind_speed: controls.windSpeed
+    wind_direction: c.windDirection,
+    wind_speed: c.windSpeed
   };
 
   try {
-    const resp = await simulateApi(params);
+    const resp = await fetch(`${API_URL}/api/v1/simulate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+    if (!resp.ok) throw new Error(resp.status);
+    const data = await resp.json();
 
-    if (resp.heatmap_data) {
-      updateHeatmap(resp.heatmap_data);
-    }
+    if (data.heatmap_data) updateSmogSegments(data.heatmap_data);
+    updateAqi(data.aqi || 0);
 
-    updateAqi(resp.aqi || 0);
-
-    if (resp.ai_insight) {
-      const insightEl = document.getElementById('insightText');
-      const insightOverlay = document.getElementById('insightOverlay');
-      if (insightEl) insightEl.textContent = resp.ai_insight;
-      if (insightOverlay) insightOverlay.classList.remove('hidden');
+    if (data.ai_insight) {
+      const it = document.getElementById('insightText');
+      const io = document.getElementById('insightOverlay');
+      if (it) it.textContent = data.ai_insight;
+      if (io) io.classList.remove('hidden');
     }
   } catch (e) {
-    console.error('Simulation error:', e);
+    console.error('API:', e);
     updateAqi(0);
-    const insightEl = document.getElementById('insightText');
-    if (insightEl) insightEl.textContent = 'Не удалось подключиться к серверу. Убедитесь, что бэкенд запущен на localhost:8000';
+    const it = document.getElementById('insightText');
+    if (it) it.textContent = 'Нет подключения к серверу. Запустите бэкенд на localhost:8000';
     document.getElementById('insightOverlay')?.classList.remove('hidden');
   }
 }
 
 function updateAqi(aqi) {
-  const overlay = document.getElementById('aqiOverlay');
-  const numberEl = document.getElementById('aqiNumber');
-  const statusEl = document.getElementById('aqiStatus');
-  const arcEl = document.getElementById('aqiArc');
-  if (!overlay || !numberEl) return;
+  const ov = document.getElementById('aqiOverlay');
+  const num = document.getElementById('aqiNumber');
+  const st = document.getElementById('aqiStatus');
+  const arc = document.getElementById('aqiArc');
+  if (!ov || !num) return;
 
-  overlay.classList.remove('hidden');
-  numberEl.textContent = aqi;
+  ov.classList.remove('hidden');
+  num.textContent = aqi;
 
-  const circumference = 2 * Math.PI * 38;
-  const progress = Math.min(aqi / 500, 1);
-  arcEl.setAttribute('stroke-dasharray', `${circumference * progress} ${circumference}`);
+  const circ = 2 * Math.PI * 36;
+  const prog = Math.min(aqi / 500, 1);
+  arc.setAttribute('stroke-dasharray', `${circ * prog} ${circ}`);
 
   let color, label;
   if (aqi <= 50) { color = '#0ae448'; label = 'Хорошо'; }
-  else if (aqi <= 100) { color = '#ffc533'; label = 'Умеренно'; }
+  else if (aqi <= 100) { color = '#8dd6ff'; label = 'Умеренно'; }
   else if (aqi <= 150) { color = '#ff8709'; label = 'Нездоровое'; }
-  else if (aqi <= 200) { color = '#ff3333'; label = 'Плохое'; }
-  else { color = '#880e4f'; label = 'Опасное'; }
+  else if (aqi <= 200) { color = '#e53935'; label = 'Плохое'; }
+  else { color = '#a0142a'; label = 'Опасное'; }
 
-  numberEl.style.color = color;
-  arcEl.setAttribute('stroke', color);
-  statusEl.textContent = label;
-  statusEl.style.color = color;
-  overlay.style.boxShadow = `0 0 20px ${color}30`;
+  num.style.color = color;
+  arc.setAttribute('stroke', color);
+  st.textContent = label;
+  st.style.color = color;
+  ov.style.boxShadow = `inset rgba(199,211,234,0.08) 0 1px 1px 0, 0 0 24px ${color}20`;
 }
 
 function initAiChat() {
-  const input = document.getElementById('aiInput');
-  const sendBtn = document.getElementById('aiSendBtn');
-  const messages = document.getElementById('aiMessages');
-  if (!input || !sendBtn || !messages) return;
+  const inp = document.getElementById('aiInput');
+  const btn = document.getElementById('aiSendBtn');
+  const msgs = document.getElementById('aiMessages');
+  if (!inp || !btn || !msgs) return;
 
   const send = () => {
-    const text = input.value.trim();
+    const text = inp.value.trim();
     if (!text) return;
+    appendMsg(msgs, text, true);
+    inp.value = '';
 
-    appendMsg(messages, text, true);
-    input.value = '';
-
-    const typing = document.createElement('div');
-    typing.className = 'typing-dots';
-    typing.innerHTML = '<span></span><span></span><span></span>';
-    messages.appendChild(typing);
-    messages.scrollTop = messages.scrollHeight;
+    const dots = document.createElement('div');
+    dots.className = 'typing-dots';
+    dots.innerHTML = '<span></span><span></span><span></span>';
+    msgs.appendChild(dots);
+    msgs.scrollTop = msgs.scrollHeight;
 
     setTimeout(() => {
-      typing.remove();
-      const reply = generateAiReply(text);
-      appendMsg(messages, reply, false);
-    }, 800 + Math.random() * 700);
+      dots.remove();
+      appendMsg(msgs, aiReply(text), false);
+    }, 700 + Math.random() * 800);
   };
 
-  sendBtn.addEventListener('click', send);
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+  btn.addEventListener('click', send);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 }
 
-function appendMsg(container, text, isUser) {
-  const now = new Date();
-  const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  const div = document.createElement('div');
-  div.className = `ai-msg ${isUser ? 'user' : 'bot'}`;
-  div.innerHTML = `${text}<div class="ai-msg-time">${time}</div>`;
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
+function appendMsg(c, text, isUser) {
+  const t = new Date();
+  const ts = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+  const d = document.createElement('div');
+  d.className = `ai-msg ${isUser ? 'user' : 'bot'}`;
+  d.innerHTML = `${text}<div class="ai-msg-time">${ts}</div>`;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
 }
 
-function generateAiReply(q) {
+function aiReply(q) {
   const t = q.toLowerCase();
   if (t.includes('тэц') || t.includes('теплоэлектро'))
-    return 'ТЭЦ Бишкек — один из главных источников загрязнения. При работе на угле она вносит до 40% в общий AQI. Перевод на газ может снизить выбросы на 60-70%. Рекомендуется поэтапная модернизация с установкой фильтров.';
+    return 'ТЭЦ Бишкек — крупнейший источник выбросов. На угле даёт до 40% AQI. Перевод на газ снизит выбросы на 60-70%. Рекомендую поэтапную модернизацию с установкой электрофильтров.';
   if (t.includes('трафик') || t.includes('пробки') || t.includes('машин'))
-    return 'Автотранспорт вносит ~35% в загрязнение. Основные проблемы: устаревший автопарк и перегруженность центральных улиц. Развитие общественного транспорта может снизить AQI на 30-50 пунктов.';
+    return 'Автотранспорт — ~35% загрязнения. Основные узлы: Ошский базар, Проспект Чуй. Развитие электротранспорта и BRT-линий снизит AQI на 30-50 пунктов.';
   if (t.includes('ветер') || t.includes('погод'))
-    return 'Ветер — ключевой природный фактор. При скорости >5 м/с смог активно рассеивается. Бишкек расположен в котловине, что затрудняет естественную вентиляцию, особенно зимой при температурной инверсии.';
+    return 'Ветер — главный природный регулятор. При >5 м/с смог рассеивается. Бишкек в котловине — зимой температурная инверсия блокирует вертикальное рассеивание.';
   if (t.includes('уголь') || t.includes('отопл'))
-    return 'Угольное отопление в частном секторе — третий по значимости источник (~20% AQI). Переход на газовое или электрическое отопление может значительно улучшить качество воздуха зимой.';
-  return 'Качество воздуха в Бишкеке зависит от множества факторов: ТЭЦ, трафика, типов отопления и погоды. Попробуйте задать конкретный вопрос о любом из этих факторов.';
+    return 'Угольное отопление — ~20% AQI зимой. Перевод частного сектора на газ/электро кардинально улучшит ситуацию в жилых районах.';
+  return 'Качество воздуха зависит от ТЭЦ, трафика, отопления и метеоусловий. Задайте конкретный вопрос о любом факторе для детального анализа.';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   initNavbar();
-
-  try {
-    initPreviewMap('preview-map');
-  } catch (e) {}
+  try { initPreviewMap('preview-map'); } catch (e) {}
 });
