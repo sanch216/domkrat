@@ -263,33 +263,62 @@ async def generate_mock_heatmap(
     aqi = int(avg_intensity * 500)
     aqi = min(max(aqi, 0), 500)
 
-    # --- Текстовый отчёт ---------------------------------------------------
-    if aqi <= 50:
-        level = "Хорошее"
-    elif aqi <= 100:
-        level = "Умеренное"
-    elif aqi <= 150:
-        level = "Нездоровое для чувствительных групп"
-    elif aqi <= 200:
-        level = "Нездоровое"
-    elif aqi <= 300:
-        level = "Очень нездоровое"
-    else:
-        level = "Опасное"
+    # Рассчитываем агрегированные параметры для AI Advisor из city_state
+    tec_statuses = [params.city_state.get("tec_1", "coal_full"), params.city_state.get("tec_2_west", "disabled")]
+    tec_map = {"coal_full": 100, "filters_installed": 50, "gas_converted": 10, "disabled": 0}
+    tec_power_pct = sum(tec_map.get(s, 100) for s in tec_statuses) / len(tec_statuses)
 
-    # Подсчёт активных загрязнителей / поглотителей
-    polluters = [s for s in sources if s["emission"] > 0.01]
-    absorbers = [s for s in sources if s["emission"] < -0.01]
-    weather_note = f"Температура {temperature}°C. " if params.use_real_weather else ""
-    inversion_note = "⚠️ Температурная инверсия усиливает загрязнение! " if temperature < 0 else ""
+    traffic_statuses = [
+        params.city_state.get("traffic_osh_bazaar", "normal"),
+        params.city_state.get("traffic_east_terminal", "normal"),
+        params.city_state.get("traffic_south_highway", "normal")
+    ]
+    traffic_map = {"congested": 90, "normal": 50, "low": 20, "closed": 0, "pedestrian_zone": 0}
+    traffic_level_pct = sum(traffic_map.get(s, 50) for s in traffic_statuses) / len(traffic_statuses)
 
-    ai_text = (
-        f"AQI: {aqi} — качество воздуха: {level}. "
-        f"Активных источников: {len(polluters)}, зелёных зон: {len(absorbers)}. "
-        f"{weather_note}"
-        f"{inversion_note}"
-        f"Ветер {wind_speed} м/с, направление {wind_direction}° "
-        f"(шлейф → {plume_dir_deg:.0f}°)."
-    ).strip()
+    heating_objects = ["private_sector_north", "private_sector_south", "private_sector_east", "novostroyka_ak_orgo", "novostroyka_kelechek"]
+    coal_active = any(params.city_state.get(obj) == "coal_heating" for obj in heating_objects)
+    heating_ban = not coal_active
+
+    # --- Текстовый совет от AI (OpenRouter) ---
+    try:
+        from ai_advisor import get_mayor_advice
+        ai_text = get_mayor_advice(
+            avg_pollution=aqi,
+            tec_power=tec_power_pct,
+            traffic=traffic_level_pct,
+            heating_ban=heating_ban,
+            wind_speed=wind_speed
+        )
+    except Exception as e:
+        print(f"Ошибка вызова AI Advisor, используется заглушка: {e}")
+        if aqi <= 50:
+            level = "Хорошее"
+        elif aqi <= 100:
+            level = "Умеренное"
+        elif aqi <= 150:
+            level = "Нездоровое для чувствительных групп"
+        elif aqi <= 200:
+            level = "Нездоровое"
+        elif aqi <= 300:
+            level = "Очень нездоровое"
+        else:
+            level = "Опасное"
+
+        # Подсчёт активных загрязнителей / поглотителей
+        polluters = [s for s in sources if s["emission"] > 0.01]
+        absorbers = [s for s in sources if s["emission"] < -0.01]
+        weather_note = f"Температура {temperature}°C. " if params.use_real_weather else ""
+        inversion_note = "⚠️ Температурная инверсия усиливает загрязнение! " if temperature < 0 else ""
+
+        ai_text = (
+            f"AQI: {aqi} — качество воздуха: {level}. "
+            f"Активных источников: {len(polluters)}, зелёных зон: {len(absorbers)}. "
+            f"{weather_note}"
+            f"{inversion_note}"
+            f"Ветер {wind_speed} м/с, направление {wind_direction}° "
+            f"(шлейф → {plume_dir_deg:.0f}°)."
+        ).strip()
 
     return points, aqi, ai_text
+
