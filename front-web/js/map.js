@@ -25,27 +25,35 @@ const DASH_SEQ = [
 const TRAFFIC_ROADS = {
   type: 'FeatureCollection',
   features: [
-    { type: 'Feature', properties: { id: 'chui', name: 'Проспект Чуй', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.545,42.8738],[74.555,42.8738],[74.565,42.8738],[74.575,42.8738],[74.585,42.8738],[74.595,42.8738],[74.605,42.8738],[74.615,42.8738],[74.625,42.8738],[74.635,42.8738]] }},
-    { type: 'Feature', properties: { id: 'manas', name: 'Проспект Манаса', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.5828,42.840],[74.5828,42.850],[74.5828,42.860],[74.5828,42.870],[74.5828,42.880],[74.5828,42.895]] }},
-    { type: 'Feature', properties: { id: 'south', name: 'Южная магистраль', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.545,42.835],[74.560,42.835],[74.575,42.835],[74.590,42.835],[74.605,42.835],[74.620,42.835],[74.635,42.835]] }},
-    { type: 'Feature', properties: { id: '7apr', name: 'Ул. 7 Апреля', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.605,42.850],[74.605,42.860],[74.605,42.870],[74.605,42.880],[74.605,42.890]] }},
-    { type: 'Feature', properties: { id: 'osh', name: 'Ошский базар', level: 0.8 }, geometry: { type: 'LineString', coordinates: [[74.588,42.855],[74.592,42.858],[74.596,42.860],[74.600,42.862],[74.604,42.865]] }},
-    { type: 'Feature', properties: { id: 'baytik', name: 'Байтик Баатыра', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.575,42.840],[74.575,42.850],[74.575,42.860],[74.575,42.870],[74.575,42.880],[74.575,42.890]] }},
-    { type: 'Feature', properties: { id: 'jibek', name: 'Жибек Жолу', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.545,42.870],[74.560,42.870],[74.575,42.870],[74.590,42.870],[74.605,42.870],[74.620,42.870],[74.635,42.870]] }}
+    { type: 'Feature', properties: { id: 'chui', name: 'Проспект Чуй', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.540,42.8738],[74.555,42.8738],[74.570,42.8738],[74.585,42.8738],[74.600,42.8738],[74.615,42.8738],[74.630,42.8738],[74.645,42.8738],[74.660,42.8738]] }},
+    { type: 'Feature', properties: { id: 'manas', name: 'Проспект Манаса', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.5828,42.835],[74.5828,42.845],[74.5828,42.855],[74.5828,42.865],[74.5828,42.875],[74.5828,42.885],[74.5828,42.895],[74.5828,42.905]] }},
+    { type: 'Feature', properties: { id: 'south', name: 'Южная магистраль', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.540,42.835],[74.555,42.835],[74.570,42.835],[74.585,42.835],[74.600,42.835],[74.615,42.835],[74.630,42.835],[74.645,42.835],[74.660,42.835]] }},
+    { type: 'Feature', properties: { id: '7apr', name: 'Ул. 7 Апреля', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.605,42.835],[74.605,42.845],[74.605,42.855],[74.605,42.865],[74.605,42.875],[74.605,42.885],[74.605,42.895],[74.605,42.905]] }},
+    { type: 'Feature', properties: { id: 'osh', name: 'Ошский рынок', level: 0.8 }, geometry: { type: 'LineString', coordinates: [[74.585,42.855],[74.590,42.858],[74.595,42.860],[74.600,42.862],[74.605,42.865]] }},
+    { type: 'Feature', properties: { id: 'baytik', name: 'Байтик Баатыра', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.575,42.835],[74.575,42.845],[74.575,42.855],[74.575,42.865],[74.575,42.875],[74.575,42.885],[74.575,42.895],[74.575,42.905]] }},
+    { type: 'Feature', properties: { id: 'jibek', name: 'Жибек Жолу', level: 0.5 }, geometry: { type: 'LineString', coordinates: [[74.540,42.870],[74.555,42.870],[74.570,42.870],[74.585,42.870],[74.600,42.870],[74.615,42.870],[74.630,42.870],[74.645,42.870],[74.660,42.870]] }},
+    { type: 'Feature', properties: { id: 'toktogul', name: 'Токтогула', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.540,42.876],[74.555,42.876],[74.570,42.876],[74.585,42.876],[74.600,42.876],[74.615,42.876],[74.630,42.876],[74.645,42.876],[74.660,42.876]] }},
+    { type: 'Feature', properties: { id: 'ahunbaeva', name: 'Ахунбаева', level: 0.35 }, geometry: { type: 'LineString', coordinates: [[74.540,42.847],[74.555,42.847],[74.570,42.847],[74.585,42.847],[74.600,42.847],[74.615,42.847],[74.630,42.847],[74.645,42.847],[74.660,42.847]] }},
+    { type: 'Feature', properties: { id: 'togolok', name: 'Тоголок Молдо', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.540,42.892],[74.555,42.892],[74.570,42.892],[74.585,42.892],[74.600,42.892],[74.615,42.892],[74.630,42.892],[74.645,42.892],[74.660,42.892]] }},
+    { type: 'Feature', properties: { id: 'gorkogo', name: 'Горького', level: 0.45 }, geometry: { type: 'LineString', coordinates: [[74.540,42.860],[74.555,42.860],[74.570,42.860],[74.585,42.860],[74.600,42.860],[74.615,42.860],[74.630,42.860],[74.645,42.860],[74.660,42.860]] }},
+    { type: 'Feature', properties: { id: 'moskovskaya', name: 'Московская', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.592,42.835],[74.592,42.845],[74.592,42.855],[74.592,42.865],[74.592,42.875],[74.592,42.885],[74.592,42.895],[74.592,42.905]] }},
+    { type: 'Feature', properties: { id: 'abdrahmanova', name: 'Абдрахманова', level: 0.35 }, geometry: { type: 'LineString', coordinates: [[74.598,42.835],[74.598,42.845],[74.598,42.855],[74.598,42.865],[74.598,42.875],[74.598,42.885],[74.598,42.895],[74.598,42.905]] }},
+    { type: 'Feature', properties: { id: 'sovetskaya', name: 'Советская', level: 0.3 }, geometry: { type: 'LineString', coordinates: [[74.570,42.835],[74.570,42.845],[74.570,42.855],[74.570,42.865],[74.570,42.875],[74.570,42.885],[74.570,42.895],[74.570,42.905]] }},
+    { type: 'Feature', properties: { id: 'kievskaya', name: 'Киевская', level: 0.4 }, geometry: { type: 'LineString', coordinates: [[74.540,42.878],[74.555,42.878],[74.570,42.878],[74.585,42.878],[74.600,42.878],[74.615,42.878],[74.630,42.878],[74.645,42.878],[74.660,42.878]] }}
   ]
 };
 
 function generateSegments(intensities) {
-  const features = [];
-  for (let r = 0; r < STREET_LATS.length - 1; r++) {
-    for (let c = 0; c < STREET_LNGS.length - 1; c++) {
-      const lat1 = STREET_LATS[r];
-      const lat2 = STREET_LATS[r + 1];
-      const lng1 = STREET_LNGS[c];
-      const lng2 = STREET_LNGS[c + 1];
-      let intensity = 0;
+  var features = [];
+  for (var r = 0; r < STREET_LATS.length - 1; r++) {
+    for (var c = 0; c < STREET_LNGS.length - 1; c++) {
+      var lat1 = STREET_LATS[r];
+      var lat2 = STREET_LATS[r + 1];
+      var lng1 = STREET_LNGS[c];
+      var lng2 = STREET_LNGS[c + 1];
+      var intensity = 0;
       if (intensities) {
-        const match = intensities.find(d => d.row === r && d.col === c);
+        var match = intensities.find(function(d) { return d.row === r && d.col === c; });
         if (match) intensity = match.intensity;
       }
       features.push({
@@ -246,7 +254,6 @@ export function updateSegmentIntensities(data) {
 export function updateSmogSegments(heatmapData) {
   if (!map) return;
   var segments = generateSegments();
-  var latStep, lngStep;
 
   segments.features.forEach(function(seg) {
     var r = seg.properties.row;
@@ -279,7 +286,7 @@ export function updateTrafficLevel(globalLevel) {
   var updated = JSON.parse(JSON.stringify(TRAFFIC_ROADS));
   updated.features.forEach(function(f) {
     var base = f.properties.level;
-    f.properties.level = Math.min(1, base * 0.4 + (globalLevel / 100) * 0.6 + (Math.random() - 0.5) * 0.1);
+    f.properties.level = Math.min(1, base * 0.3 + (globalLevel / 100) * 0.7 + (Math.random() - 0.5) * 0.08);
   });
   var src = map.getSource('traffic-roads');
   if (src) src.setData(updated);

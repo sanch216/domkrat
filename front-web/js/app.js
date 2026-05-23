@@ -29,6 +29,36 @@ var EMISSION_FACTORS = {
   inactive: 0
 };
 
+window.showNotification = function(text, type) {
+  var container = document.getElementById('notifContainer');
+  if (!container) return;
+
+  var notif = document.createElement('div');
+  notif.className = 'notification';
+
+  var dot = document.createElement('span');
+  dot.className = 'notif-dot';
+  if (type === 'success') dot.style.background = '#0ae448';
+  else if (type === 'warning') dot.style.background = '#ff8709';
+  else if (type === 'error') dot.style.background = '#e53935';
+  else if (type === 'info') dot.style.background = '#8dd6ff';
+  else dot.style.background = '#663af3';
+  dot.style.boxShadow = '0 0 6px ' + dot.style.background;
+
+  var span = document.createElement('span');
+  span.className = 'notif-text';
+  span.textContent = text;
+
+  notif.appendChild(dot);
+  notif.appendChild(span);
+  container.appendChild(notif);
+
+  setTimeout(function() {
+    notif.classList.add('leaving');
+    setTimeout(function() { notif.remove(); }, 300);
+  }, 4000);
+};
+
 function computeLocalPollution(objects, ctrl) {
   var results = [];
   for (var r = 0; r < STREET_LATS.length - 1; r++) {
@@ -182,6 +212,18 @@ function initParallax() {
   }, { passive: true });
 }
 
+function initCardGlow() {
+  document.querySelectorAll('.feature-card').forEach(function(card) {
+    card.addEventListener('mousemove', function(e) {
+      var rect = card.getBoundingClientRect();
+      var x = ((e.clientX - rect.left) / rect.width) * 100;
+      var y = ((e.clientY - rect.top) / rect.height) * 100;
+      card.style.setProperty('--card-mouse-x', x + '%');
+      card.style.setProperty('--card-mouse-y', y + '%');
+    });
+  });
+}
+
 function initApp() {
   appReady = true;
 
@@ -197,6 +239,7 @@ function initApp() {
       initAiChat();
       switchMode('live');
       runSimulation();
+      window.showNotification('Command Center активен', 'success');
     }
   });
 }
@@ -224,6 +267,7 @@ function switchMode(mode) {
     aiPanel.classList.remove('hidden');
     showAiInfo();
     if (windSystem) windSystem.running = false;
+    window.showNotification('AI Советник подключен', 'info');
   } else {
     mapArea.classList.remove('hidden');
     aiPanel.classList.add('hidden');
@@ -242,6 +286,7 @@ function switchMode(mode) {
     if (mapEl) addMarkers(mapEl, runSimulation);
     aqiOv.classList.remove('hidden');
     insOv.classList.remove('hidden');
+    window.showNotification('Режим симуляции', 'info');
   }
 }
 
@@ -377,24 +422,12 @@ function aiReply(q) {
   if (t.indexOf('\u0442\u044d\u0446') >= 0 || t.indexOf('\u0442\u0435\u043f\u043b\u043e') >= 0)
     return 'ТЭЦ Бишкек — крупнейший источник выбросов. На угле даёт до 40% AQI. Перевод на газ снизит выбросы на 60-70%. Рекомендую поэтапную модернизацию с установкой электрофильтров.';
   if (t.indexOf('\u0442\u0440\u0430\u0444\u0438\u043a') >= 0 || t.indexOf('\u043f\u0440\u043e\u0431') >= 0 || t.indexOf('\u043c\u0430\u0448\u0438\u043d') >= 0)
-    return 'Автотранспорт составляет около 35% загрязнения. Основные узлы: Ошский базар, Проспект Чуй. Развитие электротранспорта и BRT-линий снизит AQI на 30-50 пунктов.';
+    return 'Автотранспорт составляет около 35% загрязнения. 15 основных дорог отслеживаются. Развитие электротранспорта и BRT-линий снизит AQI на 30-50 пунктов.';
   if (t.indexOf('\u0432\u0435\u0442') >= 0 || t.indexOf('\u043f\u043e\u0433\u043e\u0434') >= 0)
     return 'Ветер — главный природный регулятор. При скорости более 5 м/с смог рассеивается. Бишкек расположен в котловине — зимой температурная инверсия блокирует вертикальное рассеивание.';
   if (t.indexOf('\u0443\u0433\u043e\u043b') >= 0 || t.indexOf('\u043e\u0442\u043e\u043f') >= 0)
     return 'Угольное отопление даёт до 20% AQI зимой. Перевод частного сектора на газ или электричество кардинально улучшит ситуацию в жилых районах.';
   return 'Качество воздуха зависит от ТЭЦ, трафика, отопления и метеоусловий. Задайте конкретный вопрос о любом факторе для детального анализа.';
-}
-
-function initCardGlow() {
-  document.querySelectorAll('.feature-card').forEach(function(card) {
-    card.addEventListener('mousemove', function(e) {
-      var rect = card.getBoundingClientRect();
-      var x = ((e.clientX - rect.left) / rect.width) * 100;
-      var y = ((e.clientY - rect.top) / rect.height) * 100;
-      card.style.setProperty('--card-mouse-x', x + '%');
-      card.style.setProperty('--card-mouse-y', y + '%');
-    });
-  });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -406,4 +439,3 @@ document.addEventListener('DOMContentLoaded', function() {
   initCardGlow();
   try { initPreviewMap('preview-map'); } catch (e) {}
 });
-

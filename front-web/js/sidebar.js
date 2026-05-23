@@ -22,6 +22,8 @@ export function initSidebar(onChange) {
     toggle.addEventListener('click', function() {
       sidebar.classList.toggle('collapsed');
       toggle.innerHTML = sidebar.classList.contains('collapsed') ? '&#9656;' : '&#9666;';
+      var layout = sidebar.closest('.app-layout');
+      if (layout) layout.style.setProperty('--sidebar-w', sidebar.classList.contains('collapsed') ? '68px' : '280px');
     });
   }
 }

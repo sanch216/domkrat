@@ -134,6 +134,7 @@ function showCard(map, obj) {
     if (applyBtn && select) {
       applyBtn.addEventListener('click', function() {
         obj.state = select.value;
+        if (window.showNotification) window.showNotification(obj.name + ': ' + (STATE_LABELS[select.value] || select.value), 'info');
         currentPopup.remove();
         if (onStateChangeCb) onStateChangeCb();
       });

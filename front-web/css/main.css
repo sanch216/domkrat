@@ -598,6 +598,91 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   50% { border-color: rgba(102, 58, 243, 0.3); }
 }
 
+.deco-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.deco-diamond {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid;
+  transform: rotate(45deg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.deco-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.deco-bracket {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.08;
+}
+
+.deco-bracket::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid var(--polar-blue);
+  border-left: 1px solid var(--polar-blue);
+}
+
+.deco-bracket::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-bottom: 1px solid var(--polar-blue);
+  border-right: 1px solid var(--polar-blue);
+}
+
+@keyframes levitate {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-18px) rotate(2deg); }
+  50% { transform: translateY(-8px) rotate(-1deg); }
+  75% { transform: translateY(-22px) rotate(1.5deg); }
+}
+
+@keyframes levitateAlt {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-28px) rotate(-4deg); }
+}
+
+@keyframes rotateSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbitPulse {
+  0%, 100% { opacity: 0.06; transform: scale(1); }
+  50% { opacity: 0.12; transform: scale(1.08); }
+}
+
+@keyframes driftH {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(30px); }
+}
+
 @media (max-width: 768px) {
   .hero { padding: 110px 20px 60px; }
   .stats-bar { gap: 28px; padding: 40px 20px; }
@@ -607,5 +692,5 @@ input, select, textarea { font-family: inherit; color: inherit; background: none
   .map-preview-frame { height: 280px; }
   .feature-card, .step-card { min-height: auto; padding: 32px; }
   .cta-section { padding: 100px 0; }
-  .sparkle, .light-streak, .network-line, .crosshair, .float-orb { display: none; }
+  .sparkle, .light-streak, .network-line, .crosshair, .float-orb, .deco-ring, .deco-diamond, .deco-dot, .deco-bracket { display: none; }
 }
