@@ -51,17 +51,8 @@ export class WindSystem {
 
       if (p.age > p.maxAge || p.x < -30 || p.x > this.canvas.width + 30 || p.y < -30 || p.y > this.canvas.height + 30) {
         var n = this._spawn(false);
-        if (Math.random() < 0.5) {
-            // Spawn anywhere
-            n.x = Math.random() * this.canvas.width;
-            n.y = Math.random() * this.canvas.height;
-        } else {
-            // Spawn upwind edge
-            if (dx > 0) n.x = -15; else if (dx < 0) n.x = this.canvas.width + 15;
-            if (dy > 0) n.y = -15; else if (dy < 0) n.y = this.canvas.height + 15;
-            if (dx > 0 || dx < 0) n.y = Math.random() * this.canvas.height;
-            if (dy > 0 || dy < 0) n.x = Math.random() * this.canvas.width;
-        }
+        n.x = Math.random() * this.canvas.width;
+        n.y = Math.random() * this.canvas.height;
         n.px = n.x;
         n.py = n.y;
         Object.assign(p, n);
@@ -73,27 +64,23 @@ export class WindSystem {
       var fadeIn = Math.min(p.age / 8, 1);
       alpha *= fadeIn;
 
+      var angle = Math.atan2(p.y - p.py, p.x - p.px);
+      var headLen = p.size * 3.5;
+
       this.ctx.beginPath();
+      // Линия (тело стрелки)
       this.ctx.moveTo(p.px, p.py);
       this.ctx.lineTo(p.x, p.y);
+      // Наконечник стрелки
+      this.ctx.lineTo(p.x - headLen * Math.cos(angle - Math.PI / 6), p.y - headLen * Math.sin(angle - Math.PI / 6));
+      this.ctx.moveTo(p.x, p.y);
+      this.ctx.lineTo(p.x - headLen * Math.cos(angle + Math.PI / 6), p.y - headLen * Math.sin(angle + Math.PI / 6));
+
       this.ctx.strokeStyle = 'rgba(0, 229, 255, ' + alpha + ')';
       this.ctx.lineWidth = p.size;
       this.ctx.lineCap = 'round';
+      this.ctx.lineJoin = 'round';
       this.ctx.stroke();
-
-      if (life > 0.4 && this.windSpeed > 1.5) {
-        this.ctx.beginPath();
-        this.ctx.arc(p.x, p.y, p.size * 0.9, 0, Math.PI * 2);
-        this.ctx.fillStyle = 'rgba(0, 229, 255, ' + (alpha * 0.6) + ')';
-        this.ctx.fill();
-      }
-
-      if (life > 0.7 && p.speed > 1.8) {
-        this.ctx.beginPath();
-        this.ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
-        this.ctx.fillStyle = 'rgba(0, 229, 255, ' + (alpha * 0.12) + ')';
-        this.ctx.fill();
-      }
     }
 
     var self = this;
