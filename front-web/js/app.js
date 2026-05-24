@@ -3,6 +3,7 @@ import { initMap, updateSmogSegments, updateSegmentIntensities, updateTrafficLev
 import { addMarkers, removeMarkers, getCityObjects, getCityState, resetCityState } from './markers.js';
 import { WindSystem } from './wind.js';
 import { initSidebar, getControls, showEditControls, showLiveInfo, showAiInfo } from './sidebar.js';
+import { initWindRose, toggleWindRose, hideWindRose } from './windrose.js';
 
 var currentMode = 'live';
 var windSystem = null;
@@ -296,11 +297,15 @@ function initApp() {
       windSystem = new WindSystem(document.getElementById('windCanvas'), getMap());
       windSystem.init();
       initSidebar(runSimulation);
+      initWindRose();
       initModeButtons();
       initAiChat();
       // Bind analysis button from nav
       var analysisBtn = document.getElementById('btn-analysis');
       if (analysisBtn) analysisBtn.addEventListener('click', requestAiAnalysis);
+      // Bind wind rose button from nav
+      var wrBtn = document.getElementById('btn-windrose');
+      if (wrBtn) wrBtn.addEventListener('click', toggleWindRose);
       connectWs();
       switchMode('live');
     }
@@ -350,6 +355,9 @@ function switchMode(mode) {
     aiPanel.classList.add('hidden');
     if (windSystem) { windSystem.running = true; windSystem._loop(); windSystem.resize(); }
   }
+
+  // Hide wind rose on any mode switch
+  hideWindRose();
 
   if (mode === 'live') {
     showLiveInfo();

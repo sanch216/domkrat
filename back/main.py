@@ -95,6 +95,17 @@ async def chat(body: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Wind rose data (7-day wind history)
+# ---------------------------------------------------------------------------
+@app.get("/api/v1/wind-history")
+async def wind_history() -> dict:
+    """Возвращает историю ветра за 7 дней для розы ветров."""
+    from weather_service import get_wind_history
+    data = await get_wind_history(days=7)
+    return {"data": data}
+
+
+# ---------------------------------------------------------------------------
 @app.websocket("/api/v1/ws/simulate")
 async def ws_simulate(websocket: WebSocket) -> None:
     """WebSocket для интерактивной симуляции в реальном времени.

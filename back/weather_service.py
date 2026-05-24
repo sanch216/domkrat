@@ -35,3 +35,46 @@ async def get_current_bishkek_weather() -> dict:
     except Exception as e:
         logging.error("Open-Meteo API failed: %s. Falling back to default weather (calm).", e)
         return DEFAULTS.copy()
+
+
+async def get_wind_history(days: int = 7) -> list[dict]:
+    """Запрашивает историю ветра за последние N дней (hourly) из Open-Meteo.
+
+    Возвращает список {"speed": float, "direction": int} за каждый час.
+    """
+    from datetime import date, timedelta
+
+    end_date = date.today()
+    start_date = end_date - timedelta(days=days)
+
+    url = (
+        "https://api.open-meteo.com/v1/forecast"
+        f"?latitude=42.87&longitude=74.59"
+        f"&hourly=wind_speed_10m,wind_direction_10m"
+        f"&start_date={start_date.isoformat()}"
+        f"&end_date={end_date.isoformat()}"
+        f"&timezone=Asia%2FBishkek"
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            data = resp.json()
+
+        hourly = data.get("hourly", {})
+        speeds = hourly.get("wind_speed_10m", [])
+        directions = hourly.get("wind_direction_10m", [])
+
+        result = []
+        for i in range(min(len(speeds), len(directions))):
+            if speeds[i] is not None and directions[i] is not None:
+                result.append({
+                    "speed": float(speeds[i]),
+                    "direction": int(directions[i]),
+                })
+        return result
+    except Exception as e:
+        logging.error("Open-Meteo wind history failed: %s", e)
+        return []
+
