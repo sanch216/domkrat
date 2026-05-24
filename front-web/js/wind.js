@@ -123,7 +123,8 @@ export class WindSystem {
     }
 
     var self = this;
-    requestAnimationFrame(function() { self._loop(); });
+    if (this._reqId) cancelAnimationFrame(this._reqId);
+    this._reqId = requestAnimationFrame(function() { self._loop(); });
   }
 
   update(speed, direction) {
@@ -142,6 +143,7 @@ export class WindSystem {
 
   destroy() { 
     this.running = false; 
+    if (this._reqId) cancelAnimationFrame(this._reqId);
     this.particles = [];
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
