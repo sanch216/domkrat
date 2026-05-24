@@ -540,3 +540,11 @@
   .notification-container { left: 16px; }
   .ai-panel { left: 0; }
 }
+
+.spinning-logo {
+  animation: spinLogo 12s linear infinite;
+}
+@keyframes spinLogo {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

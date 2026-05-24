@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Domkrat — интерактивная 3D-симуляция загрязнения воздуха в Бишкеке">
-  <title>Domkrat — Чистый воздух для Бишкека</title>
+  <meta name="description" content="CityBreath — интерактивная 3D-симуляция загрязнения воздуха в Бишкеке">
+  <title>CityBreath — Чистый воздух для Бишкека</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -19,13 +19,13 @@
   <nav class="navbar" id="navbar">
     <div class="nav-inner">
       <div class="nav-logo">
-        <div class="logo-mark">&#9672;</div>
-        <span class="logo-name">Domkrat</span>
+        <img src="img/logo.png" alt="Domkrat Logo" class="spinning-logo" style="width: 32px; height: 32px; object-fit: contain;">
+        <span class="logo-name">CityBreath</span>
       </div>
       <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
       <div class="nav-links" id="navLinks">
         <button class="btn-pill btn-sm" onclick="navigateTo('about')">О нас</button>
-        <a href="https://t.me/" target="_blank" rel="noopener noreferrer" class="btn-pill btn-sm" style="text-decoration: none;">Поддержка</a>
+        <a href="https://t.me/smokeebishkek_bot" target="_blank" rel="noopener noreferrer" class="btn-pill btn-sm" style="text-decoration: none;">Поддержка</a>
         <button class="btn-pill btn-filled btn-sm" onclick="navigateTo('app')">Открыть карту</button>
       </div>
     </div>
@@ -112,24 +112,19 @@
 
     <section class="section" id="features">
       <div class="container">
-        <div class="section-header reveal">
-          <div class="section-label">Возможности</div>
-          <h2 class="section-title">Command Center для воздуха</h2>
-          <p class="section-desc">Три ключевых инструмента для мониторинга, симуляции и анализа качества воздуха в городе</p>
-        </div>
         <div class="features-grid reveal-stagger">
           <div class="feature-card reveal">
-            <div class="feature-icon violet">M</div>
+            <div class="feature-icon violet"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
             <h3>Живая 3D-карта</h3>
             <p>Город разбит на 36 сегментов по сетке улиц. Каждый сегмент окрашивается в реальном времени — от прозрачно-зелёного до пульсирующего красного. Одновременно на карте отображаются потоки ветра и анимированные линии трафика с цветовой индикацией загруженности дорог.</p>
           </div>
           <div class="feature-card reveal">
-            <div class="feature-icon blue">S</div>
+            <div class="feature-icon blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div>
             <h3>Интерактивная симуляция</h3>
             <p>Кликайте по зданиям, ТЭЦ, заводам и паркам на карте. Меняйте их тип и параметры — переводите котельные с угля на газ, снижайте мощность промзон. AI-модель мгновенно пересчитывает уровень загрязнения по каждому сегменту города и обновляет визуализацию.</p>
           </div>
           <div class="feature-card reveal">
-            <div class="feature-icon green">A</div>
+            <div class="feature-icon green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="17" x2="10" y2="21"/><line x1="14" y1="17" x2="14" y2="21"/></svg></div>
             <h3>AI-советник</h3>
             <p>Интеллектуальный помощник анализирует текущую конфигурацию города и погодные условия. Предоставляет рекомендации по снижению выбросов, оценивает влияние температурной инверсии, направления ветра и осадков на распределение смога.</p>
           </div>
@@ -178,7 +173,7 @@
       </div>
     </section>
 
-    <footer class="footer">Domkrat — AI Hub Hackathon 2026</footer>
+    <footer class="footer">CityBreath — AI Hub Hackathon 2026</footer>
   </main>
 
   <main id="about-view" class="hidden">
@@ -191,7 +186,7 @@
       <div class="hero-glow-secondary"></div>
       <div class="hero-eyebrow"><span class="dot"></span> Команда разработчиков</div>
       <h1>Мы — <em>3eFear</em></h1>
-      <p class="hero-sub">Создаем решения для улучшения экологии Бишкека. Инновации, аналитика и визуализация данных для чистого будущего.</p>
+      <p class="hero-sub">маленькая команда с большими амбициями</p>
     </section>
 
     <div class="gradient-divider"></div>
@@ -201,18 +196,18 @@
         <div class="features-grid reveal-stagger">
           <div class="feature-card reveal">
             <div class="feature-icon violet">1</div>
-            <h3>Участник 1</h3>
-            <p>Информация появится позже</p>
+            <h3>Сардалбек уулу Санжар</h3>
+            <p>Backend dev</p>
           </div>
           <div class="feature-card reveal">
             <div class="feature-icon blue">2</div>
-            <h3>Участник 2</h3>
-            <p>Информация появится позже</p>
+            <h3>Алманбеков Ислам</h3>
+            <p>ML</p>
           </div>
           <div class="feature-card reveal">
             <div class="feature-icon green">3</div>
-            <h3>Участник 3</h3>
-            <p>Информация появится позже</p>
+            <h3>Третий участник</h3>
+            <p>Frontend dev</p>
           </div>
         </div>
         <div style="margin-top:80px; display:flex; justify-content:center;" class="reveal">
@@ -226,8 +221,8 @@
     <div class="app-layout">
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-          <div class="logo-mark" style="width:26px;height:26px;font-size:11px;border-radius:7px;">&#9672;</div>
-          <span class="sidebar-title">Domkrat</span>
+          <img src="img/logo.png" alt="Logo" class="spinning-logo" style="width: 26px; height: 26px; object-fit: contain;">
+          <span class="sidebar-title">CityBreath</span>
           <button class="sidebar-collapse-btn" id="sidebarToggle">&#9666;</button>
         </div>
         <div class="sidebar-nav">
